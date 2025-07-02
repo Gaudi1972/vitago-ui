@@ -1,0 +1,336 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  background-image: url('/assets/Registro-bg.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+
+.welcome-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: url('../assets/background-vitalidad.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ---------- HEADER ---------- */
+header {
+  background-color: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  flex-wrap: wrap;
+}
+
+header .logo {
+  height: 80px;
+}
+
+header .nav-menu {
+  display: flex;
+  gap: 1.5rem;
+}
+
+header .nav-menu a {
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+}
+
+.menu-secundario {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.menu-secundario .tooltip .tooltip-text {
+  top: 2rem;
+  width: 200px;
+}
+
+/* ---------- TOOLTIP COMÚN ---------- */
+.tooltip {
+  position: relative;
+}
+
+.tooltip a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.5rem;
+  display: block;
+}
+
+/* Forzamos el color blanco en enlaces del menú secundario */
+.menu-secundario a {
+  color: #dce3f2 !important;  // Azul grisáceo claro, elegante y legible
+}
+
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  position: absolute;
+  background-color: #333;
+  color: white;
+  padding: 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  max-width: 220px;
+  top: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: normal;
+  z-index: 999;
+  text-align: center;
+}
+
+.tooltip.show-tooltip .tooltip-text,
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ---------- MAIN CONTENT ---------- */
+.main-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.welcome-box {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  max-width: 440px;
+  width: 100%;
+}
+
+.welcome-box .title {
+  font-size: 2rem;
+  color: #222;
+  margin-bottom: 1rem;
+}
+
+.welcome-box .subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #444;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.button-group .btn {
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background-color: #2e3a59;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.button-group .btn:hover {
+  background-color: #1c2438;
+}
+
+.button-group .btn.green {
+  background-color: #4CAF50;
+}
+
+.button-group .btn.green:hover {
+  background-color: #3e9143;
+}
+
+/* ---------- DESKTOP HEADER REORGANIZADO ---------- */
+@media screen and (min-width: 769px) {
+  header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header .logo {
+    margin-right: 2rem;
+  }
+
+  header .menu-secundario {
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+    flex: 1;
+  }
+
+  header .nav-menu {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .menu-secundario.desktop {
+    order: 1;
+  }
+
+  .nav-menu {
+    order: 2;
+  }
+}
+
+/* ---------- MOBILE ---------- */
+@media screen and (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  header .nav-menu {
+    display: none !important;
+    gap: 1rem;
+  }
+
+  header .menu-secundario {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    margin-top: 1rem;
+    gap: 1rem;
+  }
+
+  header .tooltip {
+    width: auto;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  header .tooltip .tooltip-text {
+    position: absolute;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    visibility: hidden;
+    opacity: 0;
+    font-size: 0.85rem;
+    top: 120%;
+    left: 50%;
+    max-width: 220px;
+    text-align: center;
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+    transition: opacity 0.3s ease;
+  }
+
+  header .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+
+.registro-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-image: url('/assets/Registro-bg.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: 'Montserrat', sans-serif;
+}
+
+
+.registro-form {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff; /* texto blanco para contraste */
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.form-input::placeholder {
+  color: #e0e0e0;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.fecha-nacimiento {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fecha-input {
+  flex: 1;
+}
+
+.form-radio-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.form-button {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.form-button:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.form-get {
+  font-size: 0.85rem;
+  color: #f0f0f0;
+  margin-top: 0.5rem;
+  text-align: center;
+}
