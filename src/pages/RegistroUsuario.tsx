@@ -1,14 +1,16 @@
-// RegistroUsuario.tsx
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth, db } from '../firebaseConfig'
 import { doc, setDoc } from 'firebase/firestore'
 import backgroundImage from '../assets/Registro-bg.jpg'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 const RegistroUsuario: React.FC = () => {
   const [paso, setPaso] = useState(1)
   const navigate = useNavigate()
+
   const [form, setForm] = useState({
     nombre: '',
     apellidos: '',
@@ -16,7 +18,7 @@ const RegistroUsuario: React.FC = () => {
     correo: '',
     password: '',
     confirmarPassword: '',
-    nacimiento: { dia: '', mes: '', anio: '' },
+    fechaNacimiento: null as Date | null,
     sexo: '',
     altura: '',
     peso: '',
@@ -24,6 +26,16 @@ const RegistroUsuario: React.FC = () => {
     objetivo: '',
     get: 0
   })
+
+  const [passwordError, setPasswordError] = useState('')
+
+  const validarPassword = (password: string) => {
+    if (password.length < 6) return 'Debe tener al menos 6 caracteres.'
+    if (!/[A-Z]/.test(password)) return 'Debe incluir una mayúscula.'
+    if (!/[a-z]/.test(password)) return 'Debe incluir una minúscula.'
+    if (!/[0-9]/.test(password)) return 'Debe incluir un número.'
+    return ''
+  }
 
   const actividadFactores: Record<string, number> = {
     Sedentario: 1.2,
@@ -34,77 +46,70 @@ const RegistroUsuario: React.FC = () => {
   }
 
   const calcularGET = () => {
-    const edad = new Date().getFullYear() - parseInt(form.nacimiento.anio)
+    if (!form.fechaNacimiento) return 0
+    const hoy = new Date()
+    const edad = hoy.getFullYear() - form.fechaNacimiento.getFullYear()
     const altura = parseFloat(form.altura)
     const peso = parseFloat(form.peso)
-    const sexo = form.sexo
     const factor = actividadFactores[form.actividad] || 1.2
-
-    let tmb = 10 * peso + 6.25 * altura - 5 * edad + (sexo === 'M' ? 5 : -161)
+    const tmb = 10 * peso + 6.25 * altura - 5 * edad + (form.sexo === 'M' ? 5 : -161)
     return Math.round(tmb * factor)
   }
 
   useEffect(() => {
     const camposCompletos =
-      form.nacimiento.dia &&
-      form.nacimiento.mes &&
-      form.nacimiento.anio &&
+      form.fechaNacimiento &&
       form.sexo &&
       form.altura &&
       form.peso &&
       form.actividad &&
       !isNaN(Number(form.altura)) &&
-      !isNaN(Number(form.peso)) &&
-      !isNaN(Number(form.nacimiento.anio))
+      !isNaN(Number(form.peso))
 
     if (camposCompletos) {
       const getCalculado = calcularGET()
       setForm((prev) => ({ ...prev, get: getCalculado }))
     }
-  }, [
-    form.nacimiento.dia,
-    form.nacimiento.mes,
-    form.nacimiento.anio,
-    form.sexo,
-    form.altura,
-    form.peso,
-    form.actividad
-  ])
+  }, [form.fechaNacimiento, form.sexo, form.altura, form.peso, form.actividad])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    if (name.startsWith('nacimiento.')) {
-      const campo = name.split('.')[1]
-      setForm({ ...form, nacimiento: { ...form.nacimiento, [campo]: value } })
-    } else {
-      setForm({ ...form, [name]: value })
-    }
+    setForm({ ...form, [name]: value })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (paso === 1) {
+      const error = validarPassword(form.password)
+      if (error) {
+        setPasswordError(error)
+        return
+      }
+
       if (form.password !== form.confirmarPassword) {
-        return alert('Las contraseñas no coinciden')
+        setPasswordError('Las contraseñas no coinciden')
+        return
       }
+
+      setPasswordError('')
       setPaso(2)
-    } else {
-      const usuarioCompleto = { ...form }
+      return
+    }
 
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, form.correo, form.password)
-        const user = userCredential.user
-
-        const { password, confirmarPassword, ...datosGuardados } = usuarioCompleto
-        await setDoc(doc(db, 'usuarios', user.uid), { ...datosGuardados })
-
-        navigate('/login')
-      } catch (error: any) {
-        console.error('Error al registrar usuario:', error)
-        alert(error.message || 'Error al registrar. Intenta de nuevo.')
-      }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, form.correo, form.password)
+      const user = userCredential.user
+      const { password, confirmarPassword, ...datosGuardados } = form
+      await setDoc(doc(db, 'usuarios', user.uid), datosGuardados)
+      navigate('/login')
+    } catch (error: any) {
+      console.error('Error al registrar usuario:', error)
+      alert(error.message || 'Error al registrar. Intenta de nuevo.')
     }
   }
+
+  const esMovil = window.innerWidth <= 768
 
   return (
     <div
@@ -120,64 +125,140 @@ const RegistroUsuario: React.FC = () => {
         alignItems: 'center'
       }}
     >
-      <form onSubmit={handleSubmit} className="registro-form" style={{ backdropFilter: 'blur(10px)', background: 'rgba(255,255,255,0.2)', padding: 20, borderRadius: 10 }}>
-        <h2 className="form-title">
+      <form
+        onSubmit={handleSubmit}
+        className="registro-form"
+        style={{
+          backdropFilter: 'blur(10px)',
+          background: 'rgba(255,255,255,0.2)',
+          padding: 20,
+          borderRadius: 10,
+          width: esMovil ? '90%' : 400
+        }}
+      >
+        <h2 className="form-title" style={{ marginBottom: 15 }}>
           {paso === 1 ? 'Crear cuenta' : 'Datos físicos y objetivo'}
         </h2>
 
         {paso === 1 ? (
           <>
-            <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} required className="form-input" />
-            <input name="apellidos" placeholder="Apellidos" value={form.apellidos} onChange={handleChange} required className="form-input" />
-            <input name="usuario" placeholder="Usuario" value={form.usuario} onChange={handleChange} required className="form-input" />
-            <input name="correo" type="email" placeholder="Correo electrónico" value={form.correo} onChange={handleChange} required className="form-input" />
-            <input name="password" type="password" placeholder="Contraseña" value={form.password} onChange={handleChange} required className="form-input" />
-            <input name="confirmarPassword" type="password" placeholder="Confirmar contraseña" value={form.confirmarPassword} onChange={handleChange} required className="form-input" />
+            <div style={{ marginBottom: 10 }}>
+              <label>Nombre:</label>
+              <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <label>Apellidos:</label>
+              <input type="text" name="apellidos" value={form.apellidos} onChange={handleChange} required />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <label>Usuario:</label>
+              <input type="text" name="usuario" value={form.usuario} onChange={handleChange} required />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <label>Correo electrónico:</label>
+              <input type="email" name="correo" value={form.correo} onChange={handleChange} required />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <label>Contraseña:</label>
+              <input type="password" name="password" value={form.password} onChange={handleChange} required />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <label>Confirmar contraseña:</label>
+              <input type="password" name="confirmarPassword" value={form.confirmarPassword} onChange={handleChange} required />
+            </div>
+
+            {passwordError && (
+              <div style={{ color: 'red', marginBottom: 10 }}>{passwordError}</div>
+            )}
           </>
         ) : (
           <>
-            <div className="form-group">
-              <label className="form-label">Fecha de nacimiento:</label>
-              <div className="fecha-nacimiento">
-                <input name="nacimiento.dia" placeholder="Día" value={form.nacimiento.dia} onChange={handleChange} required className="form-input fecha-input" />
-                <input name="nacimiento.mes" placeholder="Mes" value={form.nacimiento.mes} onChange={handleChange} required className="form-input fecha-input" />
-                <input name="nacimiento.anio" placeholder="Año" value={form.nacimiento.anio} onChange={handleChange} required className="form-input fecha-input" />
-              </div>
+            <div style={{ marginBottom: 10 }}>
+              <label>Fecha de nacimiento:</label>
+              {esMovil ? (
+                <input
+                  type="date"
+                  name="fechaNacimiento"
+                  onChange={(e) => setForm({ ...form, fechaNacimiento: new Date(e.target.value) })}
+                  required
+                />
+              ) : (
+                <DatePicker
+                  selected={form.fechaNacimiento}
+                  onChange={(date: Date) => setForm({ ...form, fechaNacimiento: date })}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Selecciona tu fecha de nacimiento"
+                  className="form-input"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              )}
             </div>
 
-            <div className="form-radio-group">
-              <label><input type="radio" name="sexo" value="M" checked={form.sexo === 'M'} onChange={handleChange} /> Hombre</label>
-              <label><input type="radio" name="sexo" value="F" checked={form.sexo === 'F'} onChange={handleChange} /> Mujer</label>
+            <div style={{ marginBottom: 10 }}>
+              <label>
+                <input type="radio" name="sexo" value="M" checked={form.sexo === 'M'} onChange={handleChange} /> Hombre
+              </label>
+              <label style={{ marginLeft: 10 }}>
+                <input type="radio" name="sexo" value="F" checked={form.sexo === 'F'} onChange={handleChange} /> Mujer
+              </label>
             </div>
 
-            <input name="altura" placeholder="Altura (cm)" value={form.altura} onChange={handleChange} required className="form-input" />
-            <input name="peso" placeholder="Peso (kg)" value={form.peso} onChange={handleChange} required className="form-input" />
+            <div style={{ marginBottom: 10 }}>
+              <label>Altura:</label>
+              <select name="altura" value={form.altura} onChange={handleChange} required>
+                <option value="">Selecciona tu altura</option>
+                {Array.from({ length: 81 }, (_, i) => 140 + i).map((cm) => (
+                  <option key={cm} value={cm}>{cm} cm</option>
+                ))}
+              </select>
+            </div>
 
-            <select name="actividad" value={form.actividad} onChange={handleChange} required className="form-input">
-              <option value="">Estilo de vida</option>
-              <option value="Sedentario">Sedentario – Trabajo sentado, poco movimiento.</option>
-              <option value="Ligero">Ligero – Caminatas cortas, tareas suaves.</option>
-              <option value="Moderado">Moderado – Movimiento frecuente, recados.</option>
-              <option value="Intenso">Intenso – Trabajo activo, mucha movilidad.</option>
-              <option value="Atleta">Atleta – Estilo de vida muy activo.</option>
-            </select>
+            <div style={{ marginBottom: 10 }}>
+              <label>Peso:</label>
+              <select name="peso" value={form.peso} onChange={handleChange} required>
+                <option value="">Selecciona tu peso</option>
+                {Array.from({ length: 101 }, (_, i) => 40 + i).map((kg) => (
+                  <option key={kg} value={kg}>{kg} kg</option>
+                ))}
+              </select>
+            </div>
 
-            <select name="objetivo" value={form.objetivo} onChange={handleChange} required className="form-input">
-              <option value="">Objetivo</option>
-              <option value="Mantener">Mantener peso</option>
-              <option value="Bajar">Bajar grasa corporal</option>
-              <option value="Subir">Subir masa muscular</option>
-              <option value="Recomposicion">Recomposición corporal</option>
-              <option value="Rendimiento">Mejorar rendimiento deportivo</option>
-            </select>
+            <div style={{ marginBottom: 10 }}>
+              <select name="actividad" value={form.actividad} onChange={handleChange} required>
+                <option value="">Estilo de vida</option>
+                <option value="Sedentario">Sedentario – Trabajo sentado</option>
+                <option value="Ligero">Ligero – Caminatas cortas</option>
+                <option value="Moderado">Moderado – Movimiento frecuente</option>
+                <option value="Intenso">Intenso – Trabajo activo</option>
+                <option value="Atleta">Atleta – Muy activo</option>
+              </select>
+            </div>
 
-            <div className="form-get">
-              GET estimado: {form.get > 0 ? `${form.get} kcal/día` : 'Completa tus datos para ver el GET estimado'}
+            <div style={{ marginBottom: 10 }}>
+              <select name="objetivo" value={form.objetivo} onChange={handleChange} required>
+                <option value="">Objetivo</option>
+                <option value="Mantener">Mantener peso</option>
+                <option value="Bajar">Bajar grasa</option>
+                <option value="Subir">Subir masa muscular</option>
+                <option value="Recomposicion">Recomposición corporal</option>
+                <option value="Rendimiento">Mejorar rendimiento</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              GET estimado: {form.get > 0 ? `${form.get} kcal/día` : 'Completa los datos para calcular GET'}
             </div>
           </>
         )}
 
-        <button type="submit" className="form-button">
+        <button type="submit" className="form-button" style={{ marginTop: 10 }}>
           {paso === 1 ? 'Siguiente' : 'Finalizar registro'}
         </button>
       </form>
@@ -186,8 +267,6 @@ const RegistroUsuario: React.FC = () => {
 }
 
 export default RegistroUsuario
-
-
 
 
 

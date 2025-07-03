@@ -5,7 +5,9 @@ import WelcomeScreen from './pages/WelcomeScreen';
 import RegistroUsuario from './pages/RegistroUsuario';
 import Login from './pages/Login';
 import { AuthProvider } from "./auth/AuthContext";
-import backgroundImage from '../assets/Registro-bg.jpeg'
+import backgroundImage from '../assets/Registro-bg.jpg'
+import fondoLogin from '../assets/login-bg.jpg';
+
 
 
 
@@ -14,8 +16,7 @@ function App() {
     <AuthProvider> {/* 👈 aquí envolvemos todo */}
       <Router>
         <Routes>
-          <Route path="/" element={<RegistroUsuario />} />
-          <Route path="/welcome" element={<WelcomeScreen />} />
+          <Route path="/" element={<WelcomeScreen />} />         {/* 👈 Ruta raíz */}
           <Route path="/registro" element={<RegistroUsuario />} />
           <Route path="/login" element={<Login />} />
         </Routes>
