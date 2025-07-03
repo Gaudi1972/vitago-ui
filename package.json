@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "vite build"
+    "vercel-build": "tsc && vite build"
   },
   "dependencies": {
     "firebase": "^11.10.0",
@@ -22,6 +22,8 @@
     "@vitejs/plugin-react": "^4.5.2",
     "eslint": "^9.29.0",
     "sass": "^1.69.5",
+    "typescript": "^5.8.3",
     "vite": "^7.0.0"
   }
 }
+
