@@ -1,0 +1,192 @@
+.resumen-nutricional-dashboard {
+  background: #fff;
+  padding: 1rem;
+  margin: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+
+  .resumen-linea {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.3rem 0;
+
+    .momento-nombre {
+      font-weight: bold !important;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .momento-kcal {
+      font-weight: bold !important;
+      color: #222;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+.bloque-momento {
+  margin-bottom: 1.25rem; // 👈 ajusta aquí el espacio entre bloques
+}
+  .detalle-alimentos {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.25rem 0;
+
+    .alimento-linea {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      column-gap: 0.75rem;
+      font-size: 0.85rem;
+      padding: 0.25rem 0;
+      margin-left: 0.75rem; // sangrado leve
+
+      .alimento-nombre {
+        color: #333;
+        font-weight: 400;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .alimento-gramos {
+        font-size: 0.8rem;
+        color: #666;
+        margin-left: 0.4rem;
+      }
+
+      .alimento-kcal {
+        font-size: 0.85rem;
+        color: #555;
+        min-width: 55px;
+        text-align: right;
+      }
+
+      .acciones-alimento {
+        display: flex;
+        gap: 0.3rem;
+
+        button {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0.15rem;
+
+          svg {
+            color: #888;
+            transition: color 0.2s ease, transform 0.1s ease;
+          }
+
+          &:hover svg {
+            color: #f57c00;
+          }
+
+          &:active svg {
+            transform: scale(0.9);
+          }
+        }
+      }
+    }
+  }
+
+  .total-kcal {
+    display: block;
+    text-align: right;
+    font-weight: bold;
+    color: #222;
+    margin-top: 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .resumen-loading,
+  .resumen-vacio {
+    text-align: center;
+    color: #999;
+    font-size: 0.9rem;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  width: 320px;
+  max-width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in-out;
+  text-align: center;
+
+  h4 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.6rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    margin: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease-in-out;
+
+    &:first-of-type {
+      background-color: #4CAF50;
+      color: white;
+
+      &:hover {
+        background-color: #45a047;
+      }
+    }
+
+    &:last-of-type {
+      background-color: #ccc;
+
+      &:hover {
+        background-color: #b3b3b3;
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+

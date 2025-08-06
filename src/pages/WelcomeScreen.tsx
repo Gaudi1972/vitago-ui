@@ -1,15 +1,13 @@
 import React, { useState } from 'react'
 import '../App.scss'
+import useIsMobile from '../hooks/useIsMobile'
+import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo-vitago.png'
 import background from '../assets/background-vitalidad.jpg'
-import useIsMobile from '../hooks/useIsMobile' // 👈 nuevo
-import { useNavigate } from 'react-router-dom'
-
 
 const WelcomeScreen: React.FC = () => {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
-
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null)
 
   const handleTooltipToggle = (index: number) => {
@@ -36,7 +34,10 @@ const WelcomeScreen: React.FC = () => {
   ]
 
   return (
-    <div className="welcome-container" style={{ backgroundImage: `url(${background})` }}>
+    <div
+      className="welcome-container"
+      style={{ backgroundImage: `url(${background})` }}
+    >
       <header className="header">
         <img src={logo} alt="VitaGo Logo" className="logo" />
 
@@ -75,7 +76,5 @@ const WelcomeScreen: React.FC = () => {
 }
 
 export default WelcomeScreen
-
-
 
 

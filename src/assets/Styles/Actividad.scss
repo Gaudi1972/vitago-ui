@@ -1,0 +1,114 @@
+.mobile-header {
+  background-color: #002147;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+}
+
+.mobile-logo img {
+  height: 40px;
+}
+
+.mobile-info {
+  text-align: right;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mobile-nav {
+  display: flex;
+  justify-content: space-around;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  padding: 0.5rem 0;
+
+  .tab-button {
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-weight: 600;
+
+    &:hover {
+      color: #ff7f00;
+    }
+  }
+}
+
+.actividad-contenido {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 0 2rem; // ← eliminado padding horizontal
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  background-color: #f3f4f6;
+  min-height: 100vh;
+  align-items: center; // ← centrado horizontal del contenido
+}
+
+// Centrar el título "Actividades del XX/XX/XXXX" en móvil
+.titulo-actividades-fecha {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.75rem;
+  text-align: left;
+
+  @media (max-width: 480px) {
+    text-align: center;
+  }
+}
+
+// Grid para tarjetas de actividades (3 por fila)
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 0 1rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr); // 3 tarjetas por fila en móvil
+    padding: 0 1rem;
+  }
+
+  .activity-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    font-size: 0.8rem;
+  }
+}
+
+.mensaje-global {
+  background-color: #e7f6e7;
+  color: #2e7d32;
+  border: 1px solid #b2dfdb;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem auto -0.5rem auto;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: opacity 0.5s ease-in-out;
+  animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}

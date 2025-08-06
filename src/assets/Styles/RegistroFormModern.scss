@@ -1,0 +1,366 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+/* ✅ TÍTULO centrado, limpio y moderno */
+.titulo-carrusel {
+  text-align: center;
+  margin: 1rem auto 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #2e2e2e;
+  width: fit-content;
+  display: block;
+}
+
+.titulo-momento {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 1.5rem 0 1rem 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ✅ Carrusel moderno horizontal */
+.carousel-comidas {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.75rem 1rem 1rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .card-comida {
+    flex: 0 0 auto;
+    min-width: 90px;
+    max-width: 100px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    span:first-child {
+      font-size: 1.6rem;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    span:last-child {
+      margin-top: 2px;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+
+    &.activo {
+      background: #ff7f00;
+      color: white;
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+/* ✅ Input moderno búsqueda alimento */
+.registro-form-input {
+  display: block;
+  margin: 0 auto;
+  max-width: 90%;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #ff7f00;
+  }
+}
+
+/* ✅ Fecha como botón */
+.selector-fecha {
+  margin: 1rem auto 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  .label-fecha {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #444;
+    cursor: pointer;
+    padding: 0.4rem 0.75rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #f9f9f9;
+    }
+
+    span {
+      font-size: 0.85rem;
+      margin-left: 0.5rem;
+      color: #999;
+    }
+  }
+}
+
+/* ✅ Modal centrado con DatePicker */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-calendario {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.btn-cancelar {
+  margin-top: 1rem;
+  background: #ccc;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #bbb;
+  }
+}
+
+/* ✅ Bloque alimento */
+.bloque-alimento {
+  margin: 1.5rem 1rem 2rem;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+
+  h4 {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: #444;
+  }
+
+  .form-alimento {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    input {
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background-color: #4caf50;
+      color: white;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.9rem;
+
+      &:hover {
+        background-color: #3f9a41;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+/* ✅ Contenedor exclusivo para nutrición */
+.nutricion-contenido {
+  padding: 0 1rem;
+  margin: 0 auto;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.dashboard-container {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* ✅ Formulario completo de registro */
+.registro-form-modern {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+
+  .contenedor-principal {
+    display: flex;
+    flex-direction: column;
+
+    .momento-titulo {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .resultados {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 0.2rem;
+      max-height: 120px;
+      overflow-y: auto;
+
+      li {
+        padding: 0.4rem;
+        font-size: 0.9rem;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+
+        &:hover {
+          background-color: #f0f0f0;
+        }
+      }
+    }
+
+    .seleccionado-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+
+      label {
+        font-weight: 500;
+        color: #333;
+        text-align: left;
+      }
+
+      strong {
+        font-size: 0.95rem;
+      }
+
+      .input-gramos-acciones {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-top: 0.5rem;
+
+        input {
+          width: 90px;
+          padding: 0.4rem;
+          font-size: 1rem;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          box-sizing: border-box;
+        }
+
+        button {
+          padding: 0.4rem 1rem;
+          background-color: #4CAF50;
+          color: white;
+          font-weight: bold;
+          border: none;
+          border-radius: 6px;
+          font-size: 0.95rem;
+          cursor: pointer;
+
+          &:hover {
+            background-color: #43a047;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ✅ Input animado para aparición opcional */
+.input-wrapper {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 100px;
+    margin-top: 0.75rem;
+    pointer-events: auto;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
