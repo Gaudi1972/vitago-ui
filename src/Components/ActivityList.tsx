@@ -1,11 +1,10 @@
-// src/Components/ActivityList.tsx
 import React, { useEffect, useState } from 'react';
 import {
   leerActividadesPorFecha,
   editarActividad,
   eliminarActividad,
   ActividadFisica
-} from '../firebase/firestoreService';
+} from '../Firebase/firestoreService';
 import { useAuth } from '../auth/AuthContext';
 import { Pencil, Trash2 } from 'lucide-react';
 import {
@@ -25,11 +24,11 @@ interface Props {
   mensajeVacio?: string;
   refrescar?: boolean;
   modoResumen?: boolean;
-  onRefrescar?: () => void;
+  onRefrescar?: (mensajeOpcional?: string) => void;
   onCambio?: () => void;
 }
 
-const iconosActividad: { [key: string]: JSX.Element } = {
+const iconosActividad: { [key: string]: React.ReactNode } = {
   correr: <IconActivity size={18} />,
   caminata: <IconWalk size={18} />,
   bici_btt: <IconBikeOff size={18} />,
@@ -58,6 +57,7 @@ const ActivityList: React.FC<Props> = ({
   const [editRitmo, setEditRitmo] = useState('');
   const [editCalorias, setEditCalorias] = useState('');
   const [editPasos, setEditPasos] = useState('');
+  const [editPPM, setEditPPM] = useState('');   // 👈 nuevo estado
 
   const [indexEliminando, setIndexEliminando] = useState<number | null>(null);
 
@@ -83,6 +83,7 @@ const ActivityList: React.FC<Props> = ({
         ? Math.round(act.calorias / 0.04).toString()
         : ''
     );
+    setEditPPM(act.ppm?.toString() || '');  // 👈 inicializar PPM
   };
 
   const cerrarModal = () => {
@@ -91,6 +92,7 @@ const ActivityList: React.FC<Props> = ({
     setEditRitmo('');
     setEditCalorias('');
     setEditPasos('');
+    setEditPPM('');
   };
 
   const guardarCambios = async () => {
@@ -104,13 +106,14 @@ const ActivityList: React.FC<Props> = ({
         actual.tipo === 'pasos_diarios'
           ? Math.round(parseInt(editPasos || '0') * 0.04)
           : parseInt(editCalorias || '0'),
+      ppm: parseInt(editPPM) || 0,   // 👈 guardar PPM
     };
 
     if (!actual.id) return;
 
     await editarActividad(user.uid, actual.id, nuevosDatos);
     cerrarModal();
-    onRefrescar?.();
+    onRefrescar?.('✅ Actividad actualizada');
     onCambio?.();
   };
 
@@ -121,7 +124,7 @@ const ActivityList: React.FC<Props> = ({
 
     await eliminarActividad(user.uid, actividad.id);
     setIndexEliminando(null);
-    onRefrescar?.();
+    onRefrescar?.('✅ Actividad eliminada');
     onCambio?.();
   };
 
@@ -142,6 +145,7 @@ const ActivityList: React.FC<Props> = ({
       ) : actividades.length === 0 ? (
         <p>{mensajeVacio}</p>
       ) : modoResumen ? (
+        // 🔹 RESUMEN PARA DASHBOARD
         <div className="resumen-nutricional-dashboard plano">
           {actividades.map((act, i) => (
             <div key={i} className="activity-line">
@@ -156,31 +160,56 @@ const ActivityList: React.FC<Props> = ({
           </div>
         </div>
       ) : (
-        <div className="activity-grid">
+        // 🔹 DETALLE COMPLETO
+        <div className="resumen-nutricional-dashboard actividad-modulo">
           {actividades.map((act, i) => (
-            <div key={i} className="activity-card">
-              <div className="activity-title">{act.tipo}</div>
-              <div className="activity-line"><strong>{act.duracion}</strong> min</div>
-              <div className="activity-line"><strong>{act.calorias}</strong> kcal</div>
-              {act.ppm && <div className="activity-line">PPM: {act.ppm}</div>}
-              {act.ritmo && <div className="activity-line">Ritmo: {act.ritmo}</div>}
-              <div className="activity-actions">
-                <button onClick={() => abrirModalEdicion(i)} className="btn-editar">
-                  <Pencil size={16} />
-                </button>
-                <button onClick={() => setIndexEliminando(i)} className="btn-eliminar">
-                  <Trash2 size={16} />
-                </button>
+            <div key={i} className="resumen-linea">
+              {/* Cabecera: actividad + acciones + kcal */}
+              <div className="resumen-header">
+                <div className="resumen-nombre">
+                  {iconosActividad[act.tipo] || <IconActivity size={18} />} {act.tipo.replace(/_/g, ' ')}
+                  <div className="acciones">
+                    <button onClick={() => abrirModalEdicion(i)} className="btn-editar">
+                      <Pencil size={16} />
+                    </button>
+                    <button onClick={() => setIndexEliminando(i)} className="btn-eliminar">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+                <span className="resumen-kcal">{Math.round(act.calorias || 0)} kcal</span>
+              </div>
+
+              {/* Parámetros debajo */}
+              <div className="resumen-detalle">
+                {act.tipo === 'pasos_diarios' ? (
+                  <p className="resumen-param">
+                    Total pasos: {Math.round(act.calorias ? act.calorias / 0.04 : 0)}
+                  </p>
+                ) : (
+                  <>
+                    {act.duracion && <p className="resumen-param">Minutos: {act.duracion}</p>}
+                    {act.ppm && <p className="resumen-param">PPM: {act.ppm}</p>}
+                    {act.ritmo && <p className="resumen-param">Ritmo: {act.ritmo}</p>}
+                  </>
+                )}
               </div>
             </div>
           ))}
+
+          <div className="total-kcal">
+            Total kcal gastadas: <strong>{Math.round(totalKcal)} kcal</strong>
+          </div>
         </div>
       )}
 
+      {/* Modal edición */}
       {indexEditando !== null && (
-        <div className="modal-edicion">
-          <div className="modal-contenido">
-            <h3>Editar Actividad</h3>
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h3>Editar actividad</h3>
+            <p>{actividades[indexEditando].tipo.replace(/_/g, ' ')}</p>
+
             {actividades[indexEditando].tipo === 'pasos_diarios' ? (
               <>
                 <label>👣 Pasos:</label>
@@ -192,18 +221,27 @@ const ActivityList: React.FC<Props> = ({
               </>
             ) : (
               <>
-                <label>⏱️ Duración:</label>
+                <label>⏱️ Duración (min):</label>
                 <input
                   type="number"
                   value={editDuracion}
                   onChange={(e) => setEditDuracion(e.target.value)}
                 />
+
+                <label>❤️ PPM:</label>
+                <input
+                  type="number"
+                  value={editPPM}
+                  onChange={(e) => setEditPPM(e.target.value)}
+                />
+
                 <label>🏃 Ritmo:</label>
                 <input
                   type="text"
                   value={editRitmo}
                   onChange={(e) => setEditRitmo(e.target.value)}
                 />
+
                 <label>🔥 Calorías:</label>
                 <input
                   type="number"
@@ -212,19 +250,20 @@ const ActivityList: React.FC<Props> = ({
                 />
               </>
             )}
+
             <div className="modal-botones">
-              <button onClick={guardarCambios}>Guardar</button>
-              <button onClick={cerrarModal}>Cancelar</button>
+              <button className="btn-guardar" onClick={guardarCambios}>Guardar</button>
+              <button className="btn-cancelar" onClick={cerrarModal}>Cancelar</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Modal eliminación */}
       {indexEliminando !== null && (
-        <div className="modal-edicion">
-          <div className="modal-contenido">
-            <h3>Eliminar actividad</h3>
-            <p>¿Deseas eliminar <strong>{actividades[indexEliminando].tipo}</strong>?</p>
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h3>¿Eliminar {actividades[indexEliminando].tipo.replace(/_/g, ' ')}?</h3>
             <div className="modal-botones">
               <button className="btn-confirmar" onClick={confirmarEliminacion}>Sí, eliminar</button>
               <button className="btn-cancelar" onClick={() => setIndexEliminando(null)}>Cancelar</button>
@@ -237,3 +276,5 @@ const ActivityList: React.FC<Props> = ({
 };
 
 export default ActivityList;
+
+

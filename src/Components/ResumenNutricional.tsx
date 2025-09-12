@@ -37,7 +37,7 @@ const ResumenNutricional: React.FC<Props> = ({
   modoResumen = false,
   onRefrescar
 }) => {
-  const { user } = useAuth();
+  const { user, ultimaActualizacion, refrescarDatos } = useAuth();
   const [datos, setDatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,7 +65,7 @@ const ResumenNutricional: React.FC<Props> = ({
 
   useEffect(() => {
     cargarDatos();
-  }, [user, fecha, claveActualizacion]);
+  }, [user, fecha, claveActualizacion, ultimaActualizacion]); // 🔹 ahora escucha cambios globales
 
   const manejarEditar = (momento: string, index: number, alimento: any) => {
     setAlimentoEditando({ momento, index, alimento });
@@ -87,7 +87,9 @@ const ResumenNutricional: React.FC<Props> = ({
     await editarAlimento(user.uid, fecha, momento, index, nuevoAlimento);
     setMostrarModal(false);
     setAlimentoEditando(null);
+
     await cargarDatos();
+    refrescarDatos(); // 🔹 notifica a toda la app
     onRefrescar?.();
   };
 
@@ -97,7 +99,9 @@ const ResumenNutricional: React.FC<Props> = ({
     try {
       await eliminarAlimento(user.uid, fecha, alimentoAEliminar.momento, alimentoAEliminar.index);
       setAlimentoAEliminar(null);
+
       await cargarDatos();
+      refrescarDatos(); // 🔹 notifica a toda la app
       onRefrescar?.();
     } catch (error) {
       console.error('Error al eliminar alimento:', error);
@@ -185,6 +189,7 @@ const ResumenNutricional: React.FC<Props> = ({
 };
 
 export default ResumenNutricional;
+
 
 
 

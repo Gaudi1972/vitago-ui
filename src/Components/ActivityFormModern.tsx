@@ -1,3 +1,4 @@
+import '../assets/Styles/ActivityFormModern.scss';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   IconActivity,
@@ -13,9 +14,9 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { es } from 'date-fns/locale';
 
-import { guardarActividad } from '../firebase/firestoreService';
+import { guardarActividad } from '../Firebase/firestoreService';
 import { getAuth } from 'firebase/auth';
-import '../assets/Styles/ActivityFormModern.scss';
+import '../assets/Styles/CarruselComun.scss';
 import { useAuth } from '../auth/AuthContext';
 
 interface Props {
@@ -25,14 +26,14 @@ interface Props {
 }
 
 const activityOptions = [
-  { value: 'correr', label: 'Correr', icon: <IconActivity size={16} /> },
-  { value: 'caminata', label: 'Caminata', icon: <IconWalk size={16} /> },
-  { value: 'bici_btt', label: 'Bicicleta BTT', icon: <IconBikeOff size={16} /> },
-  { value: 'bici_carretera', label: 'Bicicleta carretera', icon: <IconBike size={16} /> },
-  { value: 'fuerza', label: 'Fuerza', icon: <IconWeight size={16} /> },
-  { value: 'trail_running', label: 'Trail Running', icon: <IconMountain size={16} /> },
-  { value: 'trekking', label: 'Trekking', icon: <IconMap size={16} /> },
-  { value: 'pasos_diarios', label: 'Pasos diarios', icon: <IconShoe size={16} /> },
+  { value: 'correr', label: 'Correr', icon: <IconActivity size={24} /> },
+  { value: 'caminata', label: 'Caminata', icon: <IconWalk size={24} /> },
+  { value: 'bici_btt', label: 'Bicicleta BTT', icon: <IconBikeOff size={24} /> },
+  { value: 'bici_carretera', label: 'Bicicleta carretera', icon: <IconBike size={24} /> },
+  { value: 'fuerza', label: 'Fuerza', icon: <IconWeight size={24} /> },
+  { value: 'trail_running', label: 'Trail Running', icon: <IconMountain size={24} /> },
+  { value: 'trekking', label: 'Trekking', icon: <IconMap size={24} /> },
+  { value: 'pasos_diarios', label: 'Pasos diarios', icon: <IconShoe size={24} /> },
 ];
 
 const MET_VALUES: Record<string, number> = {
@@ -46,10 +47,10 @@ const MET_VALUES: Record<string, number> = {
 };
 
 const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividadGuardada }) => {
-  const { perfil } = useAuth();
-  const [actividad, setActividad] = useState<string>(activityOptions[0].value);
-  const carruselRef = useRef<HTMLDivElement>(null);
-  const botonesRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const { perfil, refrescarDatos } = useAuth();
+  const [actividad, setActividad] = useState<string | null>(null);
+
+  const botonesRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [duracion, setDuracion] = useState('');
@@ -57,7 +58,7 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
   const [ritmo, setRitmo] = useState('');
   const [pasos, setPasos] = useState('');
   const [calorias, setCalorias] = useState('');
-  const [usarCaloriasManuales, setUsarCaloriasManuales] = useState(false); // ✅
+  const [usarCaloriasManuales, setUsarCaloriasManuales] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
   const fechaTexto = new Date(fecha).toLocaleDateString('es-ES', {
@@ -72,7 +73,6 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
     btn?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
   }, []);
 
-  // 🔁 Calorías automáticas para pasos
   useEffect(() => {
     if (actividad === 'pasos_diarios' && pasos) {
       const kcal = Math.round(parseInt(pasos) * 0.04);
@@ -80,9 +80,8 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
     }
   }, [actividad, pasos]);
 
-  // 🔁 Calorías automáticas (si no se introducen manualmente)
   useEffect(() => {
-    if (actividad === 'pasos_diarios' || usarCaloriasManuales) return;
+    if (!actividad || actividad === 'pasos_diarios' || usarCaloriasManuales) return;
 
     const duracionMin = parseFloat(duracion);
     const pesoKg = parseFloat(perfil?.peso || '');
@@ -94,21 +93,17 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
     const MET = MET_VALUES[actividad];
 
     let kcal = 0;
-
     if (!isNaN(duracionMin) && !isNaN(pesoKg)) {
       if (!isNaN(ppmValor) && perfil?.sexo && perfil?.fechaNacimiento) {
-        // Fórmula Keytel
         if (sexo === 'M') {
           kcal = ((-55.0969 + (0.6309 * ppmValor) + (0.1988 * pesoKg) + (0.2017 * edad)) / 4.184) * duracionMin;
         } else {
           kcal = ((-20.4022 + (0.4472 * ppmValor) - (0.1263 * pesoKg) + (0.074 * edad)) / 4.184) * duracionMin;
         }
       } else if (MET) {
-        // Fórmula MET
         const duracionHoras = duracionMin / 60;
         kcal = MET * pesoKg * duracionHoras;
       }
-
       setCalorias(Math.round(kcal).toString());
     } else {
       setCalorias('');
@@ -121,6 +116,7 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error('No autenticado');
+      if (!actividad) throw new Error('No se ha seleccionado ninguna actividad');
 
       await guardarActividad(user.uid, {
         tipo: actividad,
@@ -133,12 +129,16 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
 
       setMensaje('✅ Actividad registrada');
       onActividadGuardada?.();
+      refrescarDatos();
 
+      setActividad(null);
       setDuracion('');
       setPPM('');
       setRitmo('');
       setPasos('');
-      if (actividad !== 'pasos_diarios') setCalorias('');
+      setCalorias('');
+      setUsarCaloriasManuales(false);
+
       setTimeout(() => setMensaje(''), 3000);
     } catch (error) {
       setMensaje('❌ Error al guardar');
@@ -148,30 +148,20 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
 
   return (
     <form className="actividad-form-modern" onSubmit={handleSubmit}>
-      <section className="selector-actividad">
-        <div className="titulo-carrusel">❤️ Selecciona una actividad</div>
-        <div className="actividad-carrusel-wrapper">
-          <div className="actividad-carrusel" ref={carruselRef}>
-            <div className="espaciador-inicial" />
-            {activityOptions.map((opt, i) => (
-              <button
-                key={opt.value}
-                type="button"
-                data-value={opt.value}
-                ref={(el) => (botonesRef.current[i] = el)}
-                className={`actividad-card ${actividad === opt.value ? 'centrado' : ''}`}
-                onClick={() => setActividad(opt.value)}
-              >
-                {opt.icon}
-                <span>{opt.label}</span>
-              </button>
-            ))}
-            <div className="espaciador-final" />
+      <div className="carousel-comidas">
+        {activityOptions.map((opt, i) => (
+          <div
+            key={opt.value}
+            ref={(el) => { botonesRef.current[i] = el; }}
+            className={`card-comida ${actividad === opt.value ? 'activo' : ''}`}
+            onClick={() => setActividad(opt.value)}
+          >
+            {opt.icon}
+            <span>{opt.label}</span>
           </div>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      {/* 📅 Selector de fecha */}
       <div className="selector-fecha">
         <div className="label-fecha" onClick={() => setMostrarCalendario(true)}>
           📅 {fechaTexto}
@@ -184,7 +174,8 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
           <div className="modal-calendario" onClick={(e) => e.stopPropagation()}>
             <DatePicker
               selected={new Date(fecha)}
-              onChange={(date: Date) => {
+              onChange={(date: Date | null) => {
+                if (!date) return;
                 const nuevaFecha = date.toISOString().split('T')[0];
                 onFechaChange(nuevaFecha);
                 setMostrarCalendario(false);
@@ -196,98 +187,94 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
         </div>
       )}
 
-      <section className="formulario-actividad">
-        {actividad !== 'pasos_diarios' && (
-          <>
-            <label style={{ gridColumn: 'span 1' }}>⏱️ Duración (min):</label>
-            <label style={{ gridColumn: 'span 1' }}>❤️ PPM:</label>
+      {actividad && (
+        <div className="card-actividad">{/* 🔹 Nuevo wrapper tipo tarjeta */}
+          <section className="formulario-actividad">
+            {actividad !== 'pasos_diarios' && (
+              <>
+                <label>⏱️ Duración (min):</label>
+                <div className="input-icon-wrapper">
+                  <input
+                    type="number"
+                    placeholder="Ej: 45"
+                    value={duracion}
+                    onChange={(e) => setDuracion(e.target.value)}
+                  />
+                </div>
 
-            <div className="input-icon-wrapper">
-              <input
-                type="number"
-                placeholder="Ej: 45"
-                value={duracion}
-                onChange={(e) => setDuracion(e.target.value)}
-              />
-            </div>
+                <label>❤️ PPM:</label>
+                <div className="input-icon-wrapper">
+                  <input
+                    type="number"
+                    placeholder="Ej: 145"
+                    value={ppm}
+                    onChange={(e) => setPPM(e.target.value)}
+                  />
+                </div>
 
-            <div className="input-icon-wrapper">
-              <input
-                type="number"
-                placeholder="Ej: 145"
-                value={ppm}
-                onChange={(e) => setPPM(e.target.value)}
-              />
-            </div>
+                <label>🏃 Ritmo:</label>
+                <div className="input-icon-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Ej: 5:30"
+                    value={ritmo}
+                    onChange={(e) => setRitmo(e.target.value)}
+                  />
+                </div>
 
-            <label style={{ gridColumn: 'span 1' }}>🏃 Ritmo:</label>
-            <label style={{ gridColumn: 'span 1' }}>🔥 Calorías:</label>
+                <label>🔥 Calorías:</label>
+                <div className="input-icon-wrapper">
+                  <input
+                    type="number"
+                    placeholder={usarCaloriasManuales ? 'Ej: 500' : 'Calculando...'}
+                    value={calorias}
+                    onChange={(e) => setCalorias(e.target.value)}
+                    readOnly={!usarCaloriasManuales}
+                  />
+                </div>
 
-            <div className="input-icon-wrapper">
-              <input
-                type="text"
-                placeholder="Ej: 5:30"
-                value={ritmo}
-                onChange={(e) => setRitmo(e.target.value)}
-              />
-            </div>
+                <div className="manual-calorias">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={usarCaloriasManuales}
+                      onChange={(e) => setUsarCaloriasManuales(e.target.checked)}
+                    />
+                    Quiero introducir las calorías manualmente
+                  </label>
+                </div>
+              </>
+            )}
 
-            <div className="input-icon-wrapper">
-              <input
-                type="number"
-                placeholder={usarCaloriasManuales ? 'Ej: 500' : 'Calculando...'}
-                value={calorias}
-                onChange={(e) => setCalorias(e.target.value)}
-                readOnly={!usarCaloriasManuales}
-                style={{
-                  backgroundColor: usarCaloriasManuales ? '#fff' : '#f1f1f1',
-                  color: '#555',
-                }}
-              />
-            </div>
+            {actividad === 'pasos_diarios' && (
+              <>
+                <label>👣 Pasos:</label>
+                <div className="input-icon-wrapper">
+                  <input
+                    type="number"
+                    placeholder="Ej: 8000"
+                    value={pasos}
+                    onChange={(e) => setPasos(e.target.value)}
+                  />
+                </div>
 
-            <div style={{ gridColumn: 'span 2', marginTop: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem' }}>
-                <input
-                  type="checkbox"
-                  checked={usarCaloriasManuales}
-                  onChange={(e) => setUsarCaloriasManuales(e.target.checked)}
-                  style={{ marginRight: '0.4rem' }}
-                />
-                Quiero introducir las calorías manualmente (por ejemplo desde mi reloj inteligente)
-              </label>
-            </div>
-          </>
-        )}
+                <label>🔥 Calorías:</label>
+                <div className="input-icon-wrapper">
+                  <input
+                    type="number"
+                    value={calorias}
+                    readOnly
+                  />
+                </div>
+              </>
+            )}
 
-        {actividad === 'pasos_diarios' && (
-          <>
-            <label>👣 Pasos:</label>
-            <div className="input-icon-wrapper" style={{ gridColumn: 'span 2' }}>
-              <input
-                type="number"
-                placeholder="Ej: 8000"
-                value={pasos}
-                onChange={(e) => setPasos(e.target.value)}
-              />
-            </div>
-
-            <label>🔥 Calorías:</label>
-            <div className="input-icon-wrapper" style={{ gridColumn: 'span 2' }}>
-              <input
-                type="number"
-                value={calorias}
-                readOnly
-                style={{ backgroundColor: '#f1f1f1', color: '#555' }}
-              />
-            </div>
-          </>
-        )}
-
-        <button className="guardar-btn" type="submit" style={{ gridColumn: 'span 2' }}>
-          Guardar actividad
-        </button>
-      </section>
+            <button className="guardar-btn" type="submit">
+              Guardar actividad
+            </button>
+          </section>
+        </div>
+      )}
     </form>
   );
 };

@@ -1,86 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-/* ✅ TÍTULO centrado, limpio y moderno */
-.titulo-carrusel {
-  text-align: center;
-  margin: 1rem auto 0.5rem;
-  padding: 0.5rem 1rem;
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #2e2e2e;
-  width: fit-content;
-  display: block;
-}
+/* 🔹 El título ya está en CarruselComun.scss
+   y será igual para todas las pantallas
+*/
 
-.titulo-momento {
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-  margin: 1.5rem 0 1rem 0;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* ✅ Carrusel moderno horizontal */
-.carousel-comidas {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding: 0.75rem 1rem 1rem;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  .card-comida {
-    flex: 0 0 auto;
-    min-width: 90px;
-    max-width: 100px;
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 12px 8px;
-    text-align: center;
-    cursor: pointer;
-    scroll-snap-align: start;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.75rem;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    span:first-child {
-      font-size: 1.6rem;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-
-    span:last-child {
-      margin-top: 2px;
-      font-size: 0.7rem;
-      text-align: center;
-    }
-
-    &.activo {
-      background: #ff7f00;
-      color: white;
-      transform: scale(1.05);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-  }
-}
-
-/* ✅ Input moderno búsqueda alimento */
+/* ===== Input moderno búsqueda alimento ===== */
 .registro-form-input {
   display: block;
   margin: 0 auto;
-  max-width: 90%;
+  max-width: 100%;   /* ✅ antes 90%, ahora usa todo el ancho */
   width: 100%;
   padding: 0.6rem 0.75rem;
   font-size: 1rem;
@@ -96,7 +24,7 @@
   }
 }
 
-/* ✅ Fecha como botón */
+/* ===== Fecha como botón ===== */
 .selector-fecha {
   margin: 1rem auto 1.5rem;
   display: flex;
@@ -130,7 +58,7 @@
   }
 }
 
-/* ✅ Modal centrado con DatePicker */
+/* ===== Modal centrado con DatePicker ===== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -152,30 +80,16 @@
   text-align: center;
 }
 
-.btn-cancelar {
-  margin-top: 1rem;
-  background: #ccc;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #bbb;
-  }
-}
-
-/* ✅ Bloque alimento */
+/* ===== Bloque alimento ===== */
 .bloque-alimento {
-  margin: 1.5rem 1rem 2rem;
+  margin: 1.5rem 0 2rem;  /* ✅ sin márgenes laterales extra */
   padding: 1rem;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+
+  width: 100%;       /* ✅ ocupa todo el ancho del contenedor */
+  max-width: none;   /* ✅ ya no se limita a 600px */
   box-sizing: border-box;
 
   h4 {
@@ -183,52 +97,9 @@
     font-size: 1rem;
     color: #444;
   }
-
-  .form-alimento {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-
-    input {
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 0.9rem;
-      width: 100%;
-    }
-
-    button {
-      padding: 0.5rem 1rem;
-      border: none;
-      background-color: #4caf50;
-      color: white;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.9rem;
-
-      &:hover {
-        background-color: #3f9a41;
-        cursor: pointer;
-      }
-    }
-  }
 }
 
-/* ✅ Contenedor exclusivo para nutrición */
-.nutricion-contenido {
-  padding: 0 1rem;
-  margin: 0 auto;
-  max-width: 600px;
-  box-sizing: border-box;
-}
-
-.dashboard-container {
-  max-width: 100%;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
-
-/* ✅ Formulario completo de registro */
+/* ===== Formulario completo de registro ===== */
 .registro-form-modern {
   padding: 0;
   background: transparent;
@@ -237,9 +108,10 @@
   margin-top: 1rem;
   max-height: 300px;
   overflow-y: auto;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+
+  width: 100%;       /* ✅ ancho total */
+  max-width: none;   /* ✅ igual que .bloque-alimento */
+  margin: 0 auto;
   box-sizing: border-box;
 
   .contenedor-principal {
@@ -247,9 +119,10 @@
     flex-direction: column;
 
     .momento-titulo {
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
+      font-size: 0.95rem;   /* 🔹 un poco más pequeño */
       font-weight: 600;
+      text-align: center;
+      margin: 1.5rem 0 0.5rem 0; /* 🔹 igual que .titulo-carrusel */
     }
 
     input[type="text"],
@@ -283,13 +156,18 @@
     .seleccionado-info {
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 0.5rem;
       font-size: 0.95rem;
+      text-align: center;
 
       label {
         font-weight: 500;
         color: #333;
-        text-align: left;
+        max-width: 90%;
+        line-height: 1.4;
+        text-align: center;
+        margin-bottom: 0.5rem;
       }
 
       strong {
@@ -298,31 +176,61 @@
 
       .input-gramos-acciones {
         display: flex;
-        gap: 0.5rem;
+        flex-direction: column;
         align-items: center;
+        gap: 0.5rem;
         margin-top: 0.5rem;
 
         input {
-          width: 90px;
-          padding: 0.4rem;
+          width: 70px;
+          padding: 0.3rem;
           font-size: 1rem;
           border: 1px solid #ccc;
           border-radius: 6px;
-          box-sizing: border-box;
+          text-align: center;
+          font-family: 'Poppins', sans-serif;
+
+          &:focus {
+            border-color: #ff7f00;
+            outline: none;
+          }
+        }
+
+        span {
+          font-size: 0.85rem;
+          color: #555;
+          background: #f3f3f3;
+          padding: 0.2rem 0.6rem;
+          border-radius: 4px;
+          white-space: nowrap;
         }
 
         button {
           padding: 0.4rem 1rem;
-          background-color: #4CAF50;
-          color: white;
-          font-weight: bold;
           border: none;
           border-radius: 6px;
-          font-size: 0.95rem;
+          font-size: 0.9rem;
+          font-weight: bold;
           cursor: pointer;
+          transition: background 0.2s ease;
+          width: auto;
 
-          &:hover {
-            background-color: #43a047;
+          &.secundario {
+            background-color: #ccc;
+            color: #333;
+
+            &:hover {
+              background-color: #bbb;
+            }
+          }
+
+          &:not(.secundario) {
+            background-color: #4CAF50;
+            color: white;
+
+            &:hover {
+              background-color: #43a047;
+            }
           }
         }
       }
@@ -330,7 +238,7 @@
   }
 }
 
-/* ✅ Input animado para aparición opcional */
+/* ===== Input animado para aparición opcional ===== */
 .input-wrapper {
   opacity: 0;
   transform: translateY(-8px);
@@ -347,20 +255,4 @@
     pointer-events: auto;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

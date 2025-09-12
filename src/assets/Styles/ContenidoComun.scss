@@ -1,0 +1,23 @@
+/* Contenedor unificado para todas las pantallas tipo módulo */
+.contenido-modulo,
+.dashboard-main,
+.dashboard-container {
+  padding-top: 12px;
+  padding-left: 6px;   /* 🔹 mínimo aire lateral */
+  padding-right: 6px;  /* 🔹 igual en ambos lados */
+  margin: 0 auto;
+  max-width: 100%;     /* 🔹 ocupa todo el ancho disponible */
+  box-sizing: border-box;
+}
+
+/* Aseguramos que las tarjetas internas aprovechen ancho completo */
+.contenido-modulo > .card,
+.dashboard-main > .card,
+.dashboard-container > .card {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto 1rem auto;  /* 🔹 centradas, con aire abajo */
+  box-sizing: border-box;
+}
+
+

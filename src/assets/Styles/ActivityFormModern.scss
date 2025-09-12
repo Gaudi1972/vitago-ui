@@ -1,166 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+@import 'ContenidoComun.scss';
 
+/* ========================
+   FORMULARIO ACTIVIDAD
+======================== */
 .actividad-form-modern {
-  padding: 0;
+  @extend .contenido-modulo;
   width: 100%;
   max-width: 100vw;
+  padding: 0 1rem;
+  margin: 0 auto;
+  box-sizing: border-box;
   overflow-x: hidden;
-  overflow-y: visible;
 
-  .selector-actividad {
-    margin-top: 0.25rem; // ✅ reducido como en Nutrición
+  /* 🔹 Card envolvente */
+  .card-actividad {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 1.2rem;
+    margin: 1rem auto;
+    max-width: 420px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-    .titulo-carrusel {
-      text-align: center;
-      margin: -0.25rem auto 0.15rem;
-      padding: 0.5rem 1rem;
-      font-family: 'Poppins', sans-serif;
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: #2e2e2e;
-      width: fit-content;
-      display: block;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
 
-    h3 {
-      text-align: left;
-      font-size: 1.05rem;
-      margin: 0 0 0.75rem 1rem;
-      color: #333;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-    }
-
-    .actividad-carrusel-wrapper {
-      overflow-x: auto;
-      max-width: 100%;
-      padding: 0 1rem 1rem; // ✅ igual que en Nutrición
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .actividad-carrusel {
-      display: flex;
-      gap: 0.5rem;
-      overflow-x: auto;
-      padding: 0.75rem 0 1rem;
-      scroll-snap-type: x proximity; // ✅ más suave que mandatory
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
-
-      .espaciador-inicial,
-      .espaciador-final {
-        flex: 0 0 12px; // ✅ espacio para rebote visual
-        pointer-events: none;
-      }
-
-      .actividad-card {
-        flex: 0 0 auto;
-        min-width: 90px;
-        max-width: 100px;
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 6px 8px;
-        text-align: center;
-        cursor: pointer;
-        scroll-snap-align: start;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        border: none !important;
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.75rem;
-        color: #333;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-
-        svg {
-          width: 24px;
-          height: 24px;
-          color: #444;
-          margin-bottom: 0.25rem;
-        }
-
-        span {
-          font-size: 0.7rem;
-          color: #333;
-        }
-
-        &.centrado {
-          background: #ff7f00;
-          color: white;
-          transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); // ✅ sombra visible
-          border: none !important;
-
-          svg {
-            color: white;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); // ✅ sombra en icono
-          }
-
-          span {
-            color: white;
-            font-weight: 600;
-          }
-        }
-      }
+    /* 👇 Ajustamos el formulario interno */
+    .formulario-actividad {
+      margin: 0;
+      border: none;
+      padding: 0;
+      box-shadow: none;
     }
   }
 
+  /* 🔹 Formulario */
   .formulario-actividad {
-    margin: 1rem auto;
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    padding: 1rem;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 360px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 0.75rem;
-    row-gap: 0.75rem;
+    gap: 0.75rem;
 
+    /* Labels */
     label {
-      grid-column: span 2;
       font-weight: 600;
       color: #333;
-      margin-bottom: 0.2rem;
       font-size: 0.85rem;
-    }
-
-    .input-icon-wrapper {
-      position: relative;
+      margin-bottom: 0.2rem;
+      display: block;
       grid-column: span 1;
-
-      svg {
-        position: absolute;
-        top: 50%;
-        left: 0.6rem;
-        transform: translateY(-50%);
-        color: #999;
-        pointer-events: none;
-      }
-
-      input {
-        padding-left: 2rem !important;
-      }
     }
 
+    /* Inputs */
     input[type="date"],
     input[type="number"],
     input[type="text"] {
       border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.85rem;
+      border-radius: 8px;
+      padding: 0.5rem 0.7rem;
+      font-size: 0.9rem;
       background: #fafafa;
       color: #333;
-      transition: border 0.2s ease;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
       width: 100%;
-      grid-column: span 1;
+      box-sizing: border-box;
 
       &::placeholder {
         color: #aaa;
@@ -171,77 +76,103 @@
         outline: none;
         border-color: #ff9500;
         background-color: #fff;
+        box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.2);
       }
     }
 
-    input[type="date"] {
-      grid-column: span 2;
+    /* Wrapper input */
+    .input-icon-wrapper {
+      grid-column: span 1;
+      position: relative;
+
+      input {
+        padding-left: 0.6rem;
+      }
     }
 
+    /* Checkbox calorías manuales */
+    .manual-calorias {
+      grid-column: span 2;
+      font-size: 0.8rem;
+      color: #444;
+
+      label {
+        font-weight: normal;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        line-height: 1.2rem;
+      }
+
+      input {
+        margin-right: 0.4rem;
+      }
+    }
+
+    /* Botón guardar */
     .guardar-btn {
       grid-column: span 2;
-      background-color: #ff9500;
+      background: linear-gradient(90deg, #ff9500, #ff7f00);
       color: white;
       font-weight: bold;
       border: none;
-      border-radius: 6px;
-      padding: 0.55rem;
-      font-size: 0.9rem;
+      border-radius: 8px;
+      padding: 0.7rem;
+      font-size: 0.95rem;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, transform 0.1s ease;
 
       &:hover {
-        background-color: #e07f00;
+        background: linear-gradient(90deg, #e07f00, #cc6b00);
         cursor: pointer;
+        transform: scale(1.02);
       }
 
-      img {
-        height: 20px;
+      &:active {
+        transform: scale(0.98);
       }
     }
 
+    /* Mensaje de error */
     .error-msg {
       grid-column: span 2;
       color: #e53935;
       font-size: 0.8rem;
-      margin-top: -0.4rem;
-      margin-bottom: 0.4rem;
     }
   }
 
   @media (max-width: 480px) {
-    .formulario-actividad {
-      grid-template-columns: 1fr 1fr;
-      padding: 0.6rem;
+    padding: 0 0.75rem;
+
+    .card-actividad {
+      padding: 1rem;
       border-radius: 12px;
-      column-gap: 0.5rem;
-      row-gap: 0.5rem;
+    }
+
+    .formulario-actividad {
+      gap: 0.5rem;
     }
 
     label {
-      grid-column: span 2;
       font-size: 0.8rem;
     }
 
     input[type="date"],
     input[type="number"],
     input[type="text"] {
-      padding: 0.4rem 0.6rem;
       font-size: 0.8rem;
     }
 
     .guardar-btn {
-      grid-column: span 2;
-      padding: 0.55rem;
       font-size: 0.85rem;
     }
   }
 }
 
-/* === Selector de fecha === */
+/* Selector de fecha */
 .selector-fecha {
   text-align: center;
   margin: 0.25rem 0 0.5rem;
@@ -263,7 +194,7 @@
   }
 }
 
-/* === Modal del DatePicker === */
+/* Modal DatePicker */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -282,16 +213,5 @@
   padding: 1rem;
   border-radius: 16px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-  z-index: 1000;
 }
-
-/* Ajuste para que el datepicker no sobresalga */
-.react-datepicker {
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.85rem;
-}
-
-
-
-
 

@@ -1,0 +1,91 @@
+/* Carrusel unificado para Nutrición, Actividad y Alimentos */
+.carrusel-comun,
+.carousel-comidas {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem; /* 🔹 aire arriba y abajo + laterales */
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tarjeta-carrusel,
+.card-comida {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 65px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  scroll-snap-align: center;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.8rem;   /* 🔹 tamaño de texto unificado */
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-sizing: border-box; /* evita cortes con padding */
+
+  /* 🔹 eliminamos borde y contorno negros por defecto */
+  border: none;
+  outline: none !important;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent; /* 🔹 elimina highlight negro/azul en móviles */
+
+  &:focus,
+  &:focus-visible,
+  &:focus-within,
+  &:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* 🔹 Efecto visual personalizado */
+  &:focus {
+    transform: scale(1.05) translateY(-2px); /* 🔹 efecto sobresalir */
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  &:active {
+    transform: scale(1.04) translateY(-1px); /* 🔹 pequeño feedback en click */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  svg {
+    flex-shrink: 0;
+    margin-bottom: 6px; /* 🔹 más aire entre icono y texto */
+    font-size: 1.5rem;
+  }
+
+  span, p {
+    font-size: 0.65rem !important;   /* 🔹 unificado para Nutrición, Actividad y Alimentos */
+    line-height: 1.2;
+    text-align: center;
+    margin: 0;
+  }
+
+  &.activo {
+    border: 2px solid #00a86b;
+    transform: scale(1.08) translateY(-3px); /* 🔹 más destacado al estar seleccionado */
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+/* Título centrado común */
+.titulo-carrusel {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 1.5rem 0 0.75rem 0; /* 🔹 margen superior + inferior ajustado */
+  line-height: 1.4;
+}
+

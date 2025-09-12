@@ -4,24 +4,27 @@ import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 
-// ✅ Amplía el perfil para incluir "objetivo"
 interface PerfilUsuario {
   sexo: 'M' | 'F';
   peso: string;
-  fechaNacimiento: string; // como ISO string: '1990-05-15'
-  objetivo?: 'Bajar' | 'Subir' | 'Mantener' | 'Recomposicion' | 'Rendimiento'; // NUEVO
+  fechaNacimiento: string;
+  objetivo?: 'Bajar' | 'Subir' | 'Mantener' | 'Recomposicion' | 'Rendimiento';
 }
 
 interface AuthContextType {
   user: User | null;
   perfil: PerfilUsuario | null;
   logout: () => Promise<void>;
+  ultimaActualizacion: number;           // 🔹 nuevo
+  refrescarDatos: () => void;            // 🔹 nuevo
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   perfil: null,
   logout: async () => {},
+  ultimaActualizacion: Date.now(),
+  refrescarDatos: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -29,6 +32,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [perfil, setPerfil] = useState<PerfilUsuario | null>(null);
+  const [ultimaActualizacion, setUltimaActualizacion] = useState(Date.now()); // 🔹 nuevo
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -44,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             fechaNacimiento: data.fechaNacimiento?.toDate?.()
               ? data.fechaNacimiento.toDate().toISOString()
               : data.fechaNacimiento,
-            objetivo: data.objetivo // ✅ AÑADIDO
+            objetivo: data.objetivo
           });
         } else {
           setPerfil(null);
@@ -65,13 +69,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refrescarDatos = () => setUltimaActualizacion(Date.now()); // 🔹 nuevo
+
   return (
-    <AuthContext.Provider value={{ user, perfil, logout }}>
+    <AuthContext.Provider value={{ user, perfil, logout, ultimaActualizacion, refrescarDatos }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export default AuthContext;
+
 
 

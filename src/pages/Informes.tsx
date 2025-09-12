@@ -1,20 +1,17 @@
 // src/pages/Informes.tsx
-
 import React, { useState, useEffect, useRef } from 'react';
-import HeaderMobile from '../Components/HeaderMobile';
-import TabsMenu from '../Components/TabsMenu';
-import EvaluacionNutricional from '../Components/EvaluacionNutricional2';
 import BalanceCalorico from '../Components/BalanceCalorico';
 import { DateRange, RangeKeyDict } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { calcularRecomendacionesNutricionales } from '../Services/RecomendacionService';
 import { obtenerRegistrosPorFecha } from '../Services/nutricionService';
-import { leerActividadesPorFecha } from '../firebase/firestoreService';
+import { leerActividadesPorFecha } from '../Firebase/firestoreService';
 import { useAuth } from '../auth/AuthContext';
 import FiltrosFecha from '../Components/FiltrosFecha';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
+import EvaluacionNutricional from '../Components/EvaluacionNutricional';
 
 type Rango = 'hoy' | 'ayer' | 'semana' | '7dias' | 'personalizado';
 
@@ -26,17 +23,12 @@ const etiquetasObjetivo: Record<string, string> = {
   Rendimiento: 'Mejorar rendimiento',
 };
 
-const Informes = () => {
-  const { user } = useAuth();
-  const [fechaSeleccionada] = useState(new Date());
+const Informes: React.FC = () => {
+  const { user, ultimaActualizacion } = useAuth();
   const [rangoSeleccionado, setRangoSeleccionado] = useState<Rango>('hoy');
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [rangoFechas, setRangoFechas] = useState([
-    {
-      startDate: new Date(),
-      endDate: new Date(),
-      key: 'selection',
-    },
+    { startDate: new Date(), endDate: new Date(), key: 'selection' }
   ]);
 
   const [datosNutrientes, setDatosNutrientes] = useState<any[]>([]);
@@ -45,13 +37,6 @@ const Informes = () => {
   const [alimentosPeriodo, setAlimentosPeriodo] = useState<any[]>([]);
   const [objetivoUsuario, setObjetivoUsuario] = useState('');
   const calendarioRef = useRef<HTMLDivElement | null>(null);
-
-  const fechaTexto = fechaSeleccionada.toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
 
   const isMobile = window.innerWidth <= 768;
 
@@ -74,6 +59,7 @@ const Informes = () => {
     };
   }, [mostrarCalendario]);
 
+  // Carga objetivo del usuario
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
@@ -85,35 +71,41 @@ const Informes = () => {
       }
     };
     fetchUserData();
-  }, [user]);
+  }, [user, ultimaActualizacion]);
 
+  // Calcula el rango de fechas a analizar
+  const calcularFechasAnalizadas = (): string[] => {
+    let inicio = new Date();
+    let fin = new Date();
+
+    if (rangoSeleccionado === 'ayer') {
+      inicio.setDate(inicio.getDate() - 1);
+      fin = new Date(inicio);
+    } else if (rangoSeleccionado === '7dias') {
+      inicio.setDate(inicio.getDate() - 6);
+    } else if (rangoSeleccionado === 'semana') {
+      const diaSemana = inicio.getDay() === 0 ? 6 : inicio.getDay() - 1;
+      inicio.setDate(inicio.getDate() - diaSemana);
+    } else if (rangoSeleccionado === 'personalizado') {
+      inicio = rangoFechas[0].startDate ?? new Date();
+      fin = rangoFechas[0].endDate ?? new Date();
+    }
+
+    const fechas: string[] = [];
+    const fechaIter = new Date(inicio);
+    while (fechaIter <= fin) {
+      fechas.push(fechaIter.toISOString().split('T')[0]);
+      fechaIter.setDate(fechaIter.getDate() + 1);
+    }
+    return fechas;
+  };
+
+  // Carga datos nutricionales y de actividad
   useEffect(() => {
     const cargarDatos = async () => {
       if (!user) return;
 
-      let fechaInicio = new Date();
-      let fechaFin = new Date();
-
-      if (rangoSeleccionado === 'ayer') {
-        fechaInicio.setDate(fechaInicio.getDate() - 1);
-        fechaFin = new Date(fechaInicio);
-      } else if (rangoSeleccionado === '7dias') {
-        fechaInicio.setDate(fechaInicio.getDate() - 6);
-      } else if (rangoSeleccionado === 'semana') {
-        const diaSemana = fechaInicio.getDay() === 0 ? 6 : fechaInicio.getDay() - 1;
-        fechaInicio.setDate(fechaInicio.getDate() - diaSemana);
-      } else if (rangoSeleccionado === 'personalizado') {
-        fechaInicio = rangoFechas[0].startDate;
-        fechaFin = rangoFechas[0].endDate;
-      }
-
-      const fechas: string[] = [];
-      const fechaIter = new Date(fechaInicio);
-      while (fechaIter <= fechaFin) {
-        fechas.push(fechaIter.toISOString().split('T')[0]);
-        fechaIter.setDate(fechaIter.getDate() + 1);
-      }
-
+      const fechas = calcularFechasAnalizadas();
       setFechasAnalizadas(fechas);
 
       let totales: Record<string, number> = {};
@@ -137,22 +129,22 @@ const Informes = () => {
       for (const fecha of fechas) {
         const registros = await obtenerRegistrosPorFecha(user.uid, fecha);
         const alimentos = registros.flatMap(r => r.alimentos || []);
-        if (alimentos.length === 0) continue;
-        diasConRegistros++;
+        if (alimentos.length > 0) {
+          diasConRegistros++;
+          alimentosAcumulados.push(...alimentos);
 
-        alimentosAcumulados.push(...alimentos);
-
-        alimentos.forEach(al => {
-          Object.entries(al.nutrientes || {}).forEach(([clave, valor]) => {
-            const key = normalizarClave(clave);
-            const numero = Number(valor);
-            if (!isNaN(numero)) {
-              totales[key] = (totales[key] || 0) + numero;
-            }
+          alimentos.forEach(al => {
+            Object.entries(al.nutrientes || {}).forEach(([clave, valor]) => {
+              const key = normalizarClave(clave);
+              const numero = Number(valor);
+              if (!isNaN(numero)) {
+                totales[key] = (totales[key] || 0) + numero;
+              }
+            });
           });
-        });
 
-        totalCalorias += alimentos.reduce((s, a) => s + a.calorias, 0);
+          totalCalorias += alimentos.reduce((s, a) => s + a.calorias, 0);
+        }
 
         const recomendado = await calcularRecomendacionesNutricionales(user.uid, fecha);
         totalGET += recomendado.get;
@@ -180,29 +172,24 @@ const Informes = () => {
       ]);
 
       setAlimentosPeriodo(alimentosAcumulados);
-
-      setCalorias({
-        ingerido: totalCalorias,
-        quemado: totalQuemado,
-        get: totalGET,
-      });
+      setCalorias({ ingerido: totalCalorias, quemado: totalQuemado, get: totalGET });
     };
 
     cargarDatos();
-  }, [user, rangoSeleccionado, rangoFechas]);
+  }, [user, rangoSeleccionado, rangoFechas, ultimaActualizacion]);
 
   return (
     <div className="dashboard-container">
-      <HeaderMobile fechaTexto={fechaTexto} />
-      {isMobile && <TabsMenu />}
-
-      <main className="informes-contenido" style={{ padding: '1rem' }}>
+      {/* 🔹 Unificado: usamos dashboard-main igual que el resto */}
+      <main className="dashboard-main">
         {objetivoUsuario && (
           <div className="objetivo-banner fade-in delay-1">
             <div className="icono">🎯</div>
             <div className="texto">
               <span className="etiqueta">Objetivo actual</span>
-              <span className="valor">{etiquetasObjetivo[objetivoUsuario] || objetivoUsuario}</span>
+              <span className="valor">
+                {etiquetasObjetivo[objetivoUsuario] || objetivoUsuario}
+              </span>
             </div>
           </div>
         )}
@@ -217,8 +204,17 @@ const Informes = () => {
         {mostrarCalendario && (
           <div className="calendario-personalizado" ref={calendarioRef}>
             <DateRange
-              editableDateInputs={true}
-              onChange={(item: RangeKeyDict) => setRangoFechas([item.selection])}
+              editableDateInputs
+              onChange={(item: RangeKeyDict) => {
+                const seleccion = item.selection;
+                if (seleccion?.startDate && seleccion?.endDate) {
+                  setRangoFechas([{
+                    startDate: seleccion.startDate,
+                    endDate: seleccion.endDate,
+                    key: seleccion.key || 'selection',
+                  }]);
+                }
+              }}
               moveRangeOnFirstSelection={false}
               ranges={rangoFechas}
               maxDate={new Date()}
@@ -234,6 +230,7 @@ const Informes = () => {
             ingerido={calorias.ingerido}
             quemado={calorias.quemado}
             get={calorias.get}
+            objetivo={objetivoUsuario}
           />
         </div>
 
@@ -250,4 +247,3 @@ const Informes = () => {
 };
 
 export default Informes;
-

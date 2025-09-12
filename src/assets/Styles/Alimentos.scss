@@ -1,0 +1,157 @@
+/* === Modal estilo semáforo === */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow-y: auto; /* ✅ permite hacer scroll si el modal es más alto que la pantalla */
+}
+
+.modal-content {
+  position: relative; /* ✅ necesario para posicionar el botón flotante */
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  max-width: 450px;
+  width: 95%;
+  max-height: 90vh;   /* ✅ evita que crezca más de la pantalla */
+  overflow-y: auto;   /* ✅ activa scroll dentro del modal */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  animation: fadeInUp 0.3s ease;
+  text-align: center;
+}
+
+@keyframes fadeInUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ✅ Caja destacada de calorías en plan semáforo */
+.calorias-box {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+}
+
+/* Estados específicos para calorías */
+.calorias-verde {
+  background: #2ecc71; /* Bajo en calorías */
+}
+.calorias-ambar {
+  background: #f1c40f; /* Moderado */
+  color: #333;
+}
+.calorias-rojo {
+  background: #e74c3c; /* Alto en calorías */
+}
+.calorias-gris {
+  background: #95a5a6; /* No disponible */
+}
+
+.modal-content ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Tarjeta de nutriente en plan semáforo */
+.nutriente-card {
+  display: flex;
+  align-items: flex-start; /* ✅ permite varias líneas de texto */
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #fff;
+  text-align: left;
+}
+
+/* Contenedor del valor + comentario */
+.nutriente-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.nutriente-info small {
+  font-size: 0.8rem;
+  font-weight: normal;
+  opacity: 0.9;
+}
+
+/* Estados semáforo */
+.estado-verde {
+  background: #2ecc71; /* verde */
+}
+
+.estado-ambar {
+  background: #f1c40f; /* amarillo */
+  color: #333;
+}
+
+.estado-rojo {
+  background: #e74c3c; /* rojo */
+}
+
+.estado-gris {
+  background: #95a5a6; /* gris neutro */
+}
+
+/* Icono semáforo */
+.nutriente-icon {
+  font-size: 1.4rem;
+  margin-top: 2px;
+}
+
+/* Botón cerrar (parte inferior) */
+.modal-content button {
+  margin-top: 1rem;
+  background: #002147;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.modal-content button:hover {
+  background: #004080;
+}
+
+/* ✅ Botón flotante arriba derecha */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  color: #666;
+  font-size: 1.4rem;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+  color: #e74c3c;
+}
+

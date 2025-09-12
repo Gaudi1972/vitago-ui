@@ -4,20 +4,16 @@ import { useNavigate, Link } from 'react-router-dom';
 import '../assets/Styles/Dashboard.scss';
 import { useAuth } from '../auth/AuthContext';
 import logo from '../assets/logo-vitagoBlanco.png';
-import { DateRange } from 'react-date-range';
+import { DateRange, Range, RangeKeyDict } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import ActivityList from '../Components/ActivityList';
 import ResumenNutricional from '../Components/ResumenNutricional';
-import { leerActividadesPorFecha } from '../firebase/firestoreService';
+import { leerActividadesPorFecha } from '../Firebase/firestoreService';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { obtenerRegistrosPorFecha } from '../Services/nutricionService';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import HeaderMobile from '../Components/HeaderMobile';
-import TabsMenu from '../Components/TabsMenu';
-import FiltrosFecha from '../Components/FiltrosFecha'; // ✅ REUTILIZADO
+import FiltrosFecha from '../Components/FiltrosFecha';
 
 type Rango = 'hoy' | 'ayer' | 'semana' | '7dias' | 'personalizado';
 
@@ -30,28 +26,31 @@ const etiquetasObjetivo: Record<string, string> = {
 };
 
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, ultimaActualizacion } = useAuth();
   const navigate = useNavigate();
+
   const [showSplash, setShowSplash] = useState(() => sessionStorage.getItem('justLoggedIn') === 'true');
   const [rangoSeleccionado, setRangoSeleccionado] = useState<Rango>('hoy');
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
-  const [rangoFechas, setRangoFechas] = useState([{ startDate: new Date(), endDate: new Date(), key: 'selection' }]);
+  const [rangoFechas, setRangoFechas] = useState<Range[]>([
+    { startDate: new Date(), endDate: new Date(), key: 'selection' }
+  ]);
   const [totalCalorias, setTotalCalorias] = useState(0);
   const [caloriasIngeridas, setCaloriasIngeridas] = useState(0);
   const [getUsuario, setGetUsuario] = useState(0);
   const [objetivoUsuario, setObjetivoUsuario] = useState('');
   const [refrescarDashboard, setRefrescarDashboard] = useState(false);
-  const isMobile = window.innerWidth <= 768;
+
   const calendarioRef = useRef<HTMLDivElement | null>(null);
 
-  const fechaActualFormateada = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  // 🔹 Restaurar isMobile
+  const isMobile = window.innerWidth <= 768;
 
   const aplicarPeriodoPersonalizado = () => {
     setMostrarCalendario(false);
     setRangoSeleccionado('personalizado');
   };
 
-  // Cerrar calendario al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (calendarioRef.current && !calendarioRef.current.contains(event.target as Node)) {
@@ -81,8 +80,8 @@ const Dashboard: React.FC = () => {
       const diaSemana = inicio.getDay() === 0 ? 6 : inicio.getDay() - 1;
       inicio.setDate(inicio.getDate() - diaSemana);
     } else if (rangoSeleccionado === 'personalizado') {
-      inicio = rangoFechas[0].startDate;
-      fin = rangoFechas[0].endDate;
+      inicio = rangoFechas[0].startDate ?? new Date();
+      fin = rangoFechas[0].endDate ?? new Date();
     }
 
     const fechas: string[] = [];
@@ -94,8 +93,6 @@ const Dashboard: React.FC = () => {
     return fechas;
   };
 
-  const fechasAnalizadas = calcularFechasAnalizadas();
-
   useEffect(() => {
     if (showSplash) {
       const timeout = setTimeout(() => {
@@ -106,23 +103,29 @@ const Dashboard: React.FC = () => {
     }
   }, [showSplash]);
 
+  // 🔹 Recarga datos cuando cambia la fecha, el rango o ultimaActualizacion
   useEffect(() => {
     const fetchDatos = async () => {
       if (!user) return;
+      const fechasAnalizadas = calcularFechasAnalizadas();
+
       let sumaActividad = 0;
       let sumaKcal = 0;
 
       for (const fecha of fechasAnalizadas) {
         const actividades = await leerActividadesPorFecha(user.uid, fecha);
         sumaActividad += actividades.reduce((acc, act) => acc + (act.calorias || 0), 0);
+
         const registros = await obtenerRegistrosPorFecha(user.uid, fecha);
         sumaKcal += registros.reduce((acc, reg) => acc + (reg.kcalTotal || 0), 0);
       }
+
       setTotalCalorias(sumaActividad);
       setCaloriasIngeridas(sumaKcal);
     };
+
     fetchDatos();
-  }, [user, rangoSeleccionado, rangoFechas, refrescarDashboard]);
+  }, [user, rangoSeleccionado, rangoFechas, refrescarDashboard, ultimaActualizacion]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -136,9 +139,9 @@ const Dashboard: React.FC = () => {
       }
     };
     fetchUserData();
-  }, [user]);
+  }, [user, ultimaActualizacion]);
 
-  const gastoTotal = getUsuario * fechasAnalizadas.length + totalCalorias;
+  const gastoTotal = getUsuario * calcularFechasAnalizadas().length + totalCalorias;
   const balance = caloriasIngeridas - gastoTotal;
 
   const evaluarColorBalance = (
@@ -183,21 +186,13 @@ const Dashboard: React.FC = () => {
                 <img src={logo} alt="VitaGo Logo" />
               </div>
               <nav>
-                <Link to="/acerca" className="nav-item">ℹ️ Acerca de</Link> {/* ✅ NUEVO */}
+                <Link to="/acerca" className="nav-item">ℹ️ Acerca de</Link>
                 <Link to="/dashboard" className="nav-item">🏠 Dashboard</Link>
                 <Link to="/actividad" className="nav-item">🏃 Actividad</Link>
                 <Link to="/nutricion" className="nav-item">🍎 Nutrición</Link>
                 <Link to="/informes" className="nav-item">📊 Informes</Link>
               </nav>
             </aside>
-
-          )}
-
-          {isMobile && (
-            <>
-              <HeaderMobile fechaTexto={fechaActualFormateada} />
-              <TabsMenu />
-            </>
           )}
 
           <main className="dashboard-main">
@@ -222,7 +217,12 @@ const Dashboard: React.FC = () => {
               <div className="calendario-personalizado" ref={calendarioRef}>
                 <DateRange
                   editableDateInputs
-                  onChange={item => setRangoFechas([item.selection])}
+                  onChange={(item: RangeKeyDict) => {
+                    const seleccion = item.selection;
+                    if (seleccion?.startDate && seleccion?.endDate) {
+                      setRangoFechas([seleccion]);
+                    }
+                  }}
                   moveRangeOnFirstSelection={false}
                   ranges={rangoFechas}
                   maxDate={new Date()}
@@ -238,7 +238,7 @@ const Dashboard: React.FC = () => {
                 <h2>Resumen de Actividades</h2>
                 <div className="resumen-actividad-dashboard plano">
                   <ActivityList
-                    fecha={fechasAnalizadas[0]}
+                    fecha={calcularFechasAnalizadas()[0]}
                     mostrarTitulo={false}
                     mensajeVacio="No hay actividades físicas para esta fecha."
                     refrescar={refrescarDashboard}
@@ -251,7 +251,7 @@ const Dashboard: React.FC = () => {
               <div className="card nutricion fade-in delay-2">
                 <h2>Nutrición</h2>
                 <ResumenNutricional
-                  fecha={fechasAnalizadas[0]}
+                  fecha={calcularFechasAnalizadas()[0]}
                   modoResumen={true}
                   claveActualizacion={refrescarDashboard ? Date.now() : 0}
                   onRefrescar={forzarRefresco}
@@ -286,3 +286,8 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
+
+
+
+

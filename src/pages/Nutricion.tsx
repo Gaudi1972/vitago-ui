@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo-vitagoBlanco.png';
 import RegistroModernForm from '../Components/RegistroModernForm';
 import ResumenNutricional from '../Components/ResumenNutricional';
 import DatePicker from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../assets/Styles/RegistroFormModern.scss';
-import TabsMenu from '../Components/TabsMenu';
 
 const Nutricion = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, ultimaActualizacion } = useAuth(); // 🔹 añadido ultimaActualizacion
   const navigate = useNavigate();
   const isMobile = window.innerWidth <= 768;
 
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
-  const [momentoSeleccionado, setMomentoSeleccionado] = useState<string>('Desayuno');
+  const [momentoSeleccionado, setMomentoSeleccionado] = useState<string | null>(null);
   const [refrescar, setRefrescar] = useState(false);
-  const [formularioActivo, setFormularioActivo] = useState(false); // ✅ Nuevo estado
+  const [formularioActivo, setFormularioActivo] = useState(false);
 
   const fechaFormateada = fechaSeleccionada.toISOString().split('T')[0];
   const fechaTexto = fechaSeleccionada.toLocaleDateString('es-ES', {
@@ -36,6 +34,8 @@ const Nutricion = () => {
 
   const handleRegistroGuardado = () => {
     setRefrescar(prev => !prev);
+    setMomentoSeleccionado(null);
+    setFormularioActivo(false);
   };
 
   const momentos = [
@@ -54,35 +54,24 @@ const Nutricion = () => {
     return () => document.removeEventListener('keydown', cerrarEsc);
   }, []);
 
+  // 🔹 cuando cambie ultimaActualizacion, refrescamos el resumen
+  useEffect(() => {
+    setRefrescar(prev => !prev);
+  }, [ultimaActualizacion]);
+
   return (
     <div className="dashboard-container">
-      {/* ✅ Cabecera */}
-      <div className="mobile-header">
-        <div className="mobile-logo">
-          <img src={logo} alt="VitaGo Logo" />
-        </div>
-        <div className="mobile-info">
-          <div>{fechaTexto}</div>
-          <div onClick={handleLogout}>
-            Bienvenido, {user?.email} ▼
-          </div>
-        </div>
-      </div>
-
-      {/* ✅ Navegación inferior */}
-      {isMobile && <TabsMenu />}
-
-      <main className="nutricion-contenido">
+      {/* 🔹 Unificado: usamos dashboard-main en lugar de nutricion-contenido */}
+      <main className="dashboard-main">
         <h3 className="titulo-carrusel">
           ⏰ Selecciona el momento del día
         </h3>
 
-        {/* ✅ Carrusel moderno horizontal */}
         <div className="carousel-comidas">
           {momentos.map((m) => (
             <div
               key={m.id}
-              className={`card-comida ${m.id === momentoSeleccionado ? 'activo' : ''}`}
+              className={`card-comida ${momentoSeleccionado === m.id ? 'activo' : ''}`}
               onClick={() => {
                 setMomentoSeleccionado(m.id);
                 setFormularioActivo(true);
@@ -94,7 +83,6 @@ const Nutricion = () => {
           ))}
         </div>
 
-        {/* ✅ Selector de fecha */}
         <div className="selector-fecha">
           <div
             className="label-fecha"
@@ -105,7 +93,6 @@ const Nutricion = () => {
           </div>
         </div>
 
-        {/* ✅ Modal con DatePicker */}
         {mostrarCalendario && (
           <div
             className="modal-overlay"
@@ -117,9 +104,11 @@ const Nutricion = () => {
             >
               <DatePicker
                 selected={fechaSeleccionada}
-                onChange={(date: Date) => {
-                  setFechaSeleccionada(date);
-                  setMostrarCalendario(false);
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    setFechaSeleccionada(date);
+                    setMostrarCalendario(false);
+                  }
                 }}
                 inline
                 locale={es}
@@ -128,11 +117,11 @@ const Nutricion = () => {
           </div>
         )}
 
-        {/* ✅ Título del momento actual */}
-        <h4 className="titulo-momento">{momentoSeleccionado}</h4>
+        {momentoSeleccionado && (
+          <h4 className="titulo-momento">{momentoSeleccionado}</h4>
+        )}
 
-        {/* ✅ Solo mostrar formulario tras interacción */}
-        {formularioActivo && (
+        {formularioActivo && momentoSeleccionado && (
           <RegistroModernForm
             momento={momentoSeleccionado}
             fecha={fechaFormateada}
@@ -150,21 +139,6 @@ const Nutricion = () => {
 };
 
 export default Nutricion;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
