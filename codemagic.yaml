@@ -2,8 +2,8 @@ workflows:
   ios-simulator-capacitor:
     name: iOS Simulator build (Capacitor + Vite)
     environment:
-      node: 18.16.0
-      npm: 9.5.1
+      node: 20.11.0   # ✅ Node 20 (requerido por Capacitor)
+      npm: 10.2.4
       xcode: 15.0
     cache:
       cache_paths:
@@ -43,4 +43,5 @@ workflows:
     publishing:
       email:
         recipients:
-          - vitago.app@gmail.com
+          - vitago-ui@gmail.com
+
