@@ -5,6 +5,22 @@ import { AuthProvider } from './auth/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// 📌 Importar el helper del plugin PWA
+import { registerSW } from 'virtual:pwa-register';
+
+// Registro del Service Worker automático de vite-plugin-pwa
+registerSW({
+  onNeedRefresh() {
+    console.log('📢 Nueva versión disponible. Refrescando...');
+    toast.info('Actualizando a la última versión...', { autoClose: 2000 });
+    setTimeout(() => window.location.reload(), 1000);
+  },
+  onOfflineReady() {
+    console.log('📡 App lista para funcionar offline');
+    toast.success('App lista para usar sin conexión');
+  },
+});
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
@@ -22,44 +38,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// 📌 Registro del Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then((registration) => {
-        console.log('✅ Service Worker registrado con éxito:', registration.scope);
-
-        // Escuchar mensajes del SW
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          if (event.data?.type === 'NEW_VERSION_READY') {
-            console.log('📢 Nueva versión detectada. Actualizando automáticamente...');
-            
-            // 🔹 Mostrar notificación opcional
-            toast.info('Actualizando a la última versión...', { autoClose: 2000 });
-
-            // 🔹 Forzar activación del nuevo SW y recargar
-            navigator.serviceWorker.controller?.postMessage({ type: 'SKIP_WAITING' });
-            setTimeout(() => window.location.reload(), 1000);
-          }
-        });
-
-        // Detectar instalación de nuevo SW
-        registration.onupdatefound = () => {
-          const installingWorker = registration.installing;
-          if (installingWorker) {
-            installingWorker.onstatechange = () => {
-              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('⬆️ Nueva versión lista. Actualizando...');
-                navigator.serviceWorker.controller?.postMessage({ type: 'SKIP_WAITING' });
-                setTimeout(() => window.location.reload(), 1000);
-              }
-            };
-          }
-        };
-      })
-      .catch((error) => {
-        console.error('❌ Error al registrar el Service Worker:', error);
-      });
-  });
-}

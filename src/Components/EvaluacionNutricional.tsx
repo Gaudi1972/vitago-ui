@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import '../assets/Styles/EvaluacionNutricional.scss';
 import { useAuth } from '../auth/AuthContext';
-import { obtenerAlimentosQueContribuyenAlExceso } from '../Services/alimentosService'; // al inicio
 
+// 👉 interfaces
 interface NutrienteData {
   nutriente: string;
   ingerido: number;
@@ -18,6 +18,8 @@ interface EvaluacionResultado {
   color: 'green' | 'amber' | 'red';
   unidad: string;
 }
+
+
 
 // 🔸 Tus comentarios por separado:
 const comentariosProteinas: Record<
@@ -764,7 +766,6 @@ const comentariosPotasio: Record<
     },
   },
 };
-
 // ✅ Diccionario unificado de comentarios por nutriente
 const comentariosPorNutriente: Record<
   string,
@@ -796,7 +797,6 @@ function generarComentario(
   return mapa[objetivoNormalizado]?.[color]?.[signo] || 'Comentario no disponible.';
 }
 
-
 interface Props {
   datos: NutrienteData[];
   fechasAnalizadas: string[];
@@ -804,13 +804,30 @@ interface Props {
 }
 
 const EvaluacionNutricional: React.FC<Props> = ({ datos, fechasAnalizadas, alimentosPeriodo }) => {
-
   const { perfil } = useAuth();
   const objetivo = perfil?.objetivo || 'Mantener';
+
+  const formatNumber = (valor: number): string =>
+    new Intl.NumberFormat('es-ES', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+      useGrouping: true,
+    }).format(valor);
 
   const [popupTexto, setPopupTexto] = useState('');
   const [popupNutriente, setPopupNutriente] = useState('');
   const [mostrarPopup, setMostrarPopup] = useState(false);
+
+  // 👇 estado y ref para la barra de progreso
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [scrollProgreso, setScrollProgreso] = useState(0);
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    const progreso = (scrollLeft / (scrollWidth - clientWidth)) * 100;
+    setScrollProgreso(progreso);
+  };
 
   const unidadMap: Record<string, string> = {
     'Proteínas': 'g',
@@ -868,76 +885,83 @@ const EvaluacionNutricional: React.FC<Props> = ({ datos, fechasAnalizadas, alime
     };
   };
 
-  const resultados = datos.map(d =>
-    evaluarNutriente(d.nutriente, d.ingerido, d.recomendado)
-  );
+  const resultados = datos.map(d => evaluarNutriente(d.nutriente, d.ingerido, d.recomendado));
 
-  // ✅ Handler unificado para todos los nutrientes con comentarios disponibles
-  
-const handleClickComentario = async (r: EvaluacionResultado) => {
-  if (!comentariosPorNutriente[r.nutriente]) return;
-  const valor = parseInt(r.desviacionPorcentual);
-  let texto = generarComentario(r.nutriente, valor, r.color, objetivo);
+  const handleClickComentario = async (r: EvaluacionResultado) => {
+    if (!comentariosPorNutriente[r.nutriente]) return;
+    const valor = parseInt(r.desviacionPorcentual);
+    let texto = generarComentario(r.nutriente, valor, r.color, objetivo);
 
-  // Solo si está en rojo y es un exceso, agregamos detalle
-  if (r.color === 'red' && valor > 0 && alimentosPeriodo.length > 0) {
-  const claveNutriente = r.nutriente.toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
-  const alimentosFiltrados = alimentosPeriodo
-    .filter(al => al.nutrientes && al.nutrientes[claveNutriente])
-    .map(al => ({
-      nombre: al.nombre,
-      valor: al.nutrientes[claveNutriente]
-    }))
-    .sort((a, b) => b.valor - a.valor)
-    .slice(0, 3);
+    if (r.color === 'red' && valor > 0 && alimentosPeriodo.length > 0) {
+      const claveNutriente = r.nutriente.toLowerCase().replace(/\./g, '').replace(/\s+/g, '');
+      const alimentosFiltrados = alimentosPeriodo
+        .filter(al => al.nutrientes && al.nutrientes[claveNutriente])
+        .map(al => ({
+          nombre: al.nombre,
+          valor: al.nutrientes[claveNutriente],
+        }))
+        .sort((a, b) => b.valor - a.valor)
+        .slice(0, 3);
 
-  if (alimentosFiltrados.length > 0) {
-    const listado = alimentosFiltrados.map(a => `🍞 ${a.nombre} (${Math.round(a.valor)}${r.unidad})`).join('\n');
-    texto += `\n\n❗ Evita estos alimentos por su alto contenido en ${r.nutriente.toLowerCase()}:\n${listado}`;
-  }
-}
+      if (alimentosFiltrados.length > 0) {
+        const listado = alimentosFiltrados
+          .map(a => `🍞 ${a.nombre} (${formatNumber(Math.round(a.valor))}${r.unidad})`)
+          .join('\n');
 
+        texto += `\n\n❗ Evita estos alimentos por su alto contenido en ${r.nutriente.toLowerCase()}:\n${listado}`;
+      }
+    }
 
-  setPopupTexto(texto);
-  setPopupNutriente(r.nutriente);
-  setMostrarPopup(true);
-};
-
+    setPopupTexto(texto);
+    setPopupNutriente(r.nutriente);
+    setMostrarPopup(true);
+  };
 
   return (
     <div className="evaluacion-nutricional">
-      <h3 className="titulo-tarjeta">🍽️ Evaluación de nutrientes</h3>
+      <div className="tabla-scroll-wrapper">
+        {/* 🔹 Barra de progreso */}
+        <div className="barra-scroll">
+          <div
+            className="barra-scroll-progreso"
+            style={{ width: `${scrollProgreso}%` }}
+          ></div>
+        </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Nutr.</th>
-            <th>Inger.</th>
-            <th>Recom.</th>
-            <th>%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {resultados.map((r, idx) => (
-            <tr key={idx}>
-              <td>{r.nutriente}</td>
-              <td>{r.ingerido.toLocaleString('es-ES')} {r.unidad}</td>
-              <td>{r.recomendado.toLocaleString('es-ES')} {r.unidad}</td>
-              <td
-                className={`porcentaje ${r.color}`}
-                style={{ cursor: comentariosPorNutriente[r.nutriente] ? 'pointer' : 'default' }}
-                onClick={() => handleClickComentario(r)}
-              >
-                {r.desviacionPorcentual}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        <div className="tabla-scroll" ref={scrollRef} onScroll={handleScroll}>
+          <table>
+            <thead>
+              <tr>
+                <th>Nutrientes</th>
+                <th>Ingerido</th>
+                <th>Recomendado</th>
+                <th>Desviación</th>
+              </tr>
+            </thead>
+            <tbody>
+              {resultados.map((r, idx) => (
+                <tr key={idx}>
+                  <td>{r.nutriente}</td>
+                  <td>{formatNumber(r.ingerido)} {r.unidad}</td>
+                  <td>{formatNumber(r.recomendado)} {r.unidad}</td>
+                  <td
+                    className={`porcentaje ${r.color}`}
+                    style={{ cursor: comentariosPorNutriente[r.nutriente] ? 'pointer' : 'default' }}
+                    onClick={() => handleClickComentario(r)}
+                  >
+                    {r.desviacionPorcentual}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
+      {/* ✅ Popup contextual */}
       {mostrarPopup && (
         <div className="popup-overlay" onClick={() => setMostrarPopup(false)}>
-          <div className="popup-contenido" onClick={(e) => e.stopPropagation()}>
+          <div className="popup-contenido" onClick={e => e.stopPropagation()}>
             <h4>💬 Comentario sobre {popupNutriente}</h4>
             <p>{popupTexto}</p>
             <button onClick={() => setMostrarPopup(false)}>Cerrar</button>

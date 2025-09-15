@@ -57,6 +57,55 @@
   line-height: 1.4;
 }
 
+/* 🔧 Fecha (dropdown/input) */
+.dashboard-main {
+  .fecha-control,
+  .selector-fecha,
+  .fecha-dropdown,
+  .date-dropdown,
+  .calendar-toggle,
+  .date-picker-toggle,
+  .fecha-selector {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
+    font-size: clamp(0.78rem, 2.6vw, 0.95rem);
+  }
+
+  [class*="fecha"] > button,
+  [class*="fecha"] > .dropdown,
+  [class*="fecha"] > input,
+  [class*="date"]  > button,
+  [class*="date"]  > .dropdown,
+  [class*="date"]  > input,
+  .react-datepicker__input-container input {
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
+    font-size: clamp(0.78rem, 2.6vw, 0.95rem);
+  }
+
+  .fecha-control svg,
+  .selector-fecha svg,
+  .fecha-dropdown svg,
+  .date-dropdown svg,
+  .calendar-toggle svg,
+  .date-picker-toggle svg,
+  [class*="fecha"] svg,
+  [class*="date"] svg {
+    flex: 0 0 auto;
+  }
+}
+
 /* 🔹 Listado de actividades */
 .resumen-nutricional-dashboard {
   background: #fff;
@@ -77,7 +126,6 @@
       padding-bottom: 0;
     }
 
-    /* 🔹 Cabecera: icono + nombre + acciones + kcal */
     .resumen-header {
       display: flex;
       justify-content: space-between;
@@ -130,7 +178,6 @@
       }
     }
 
-    /* 🔹 Detalle debajo */
     .resumen-detalle {
       margin-top: 0.5rem;
       font-size: 0.85rem;
@@ -180,7 +227,7 @@
 }
 
 /* ===============================
-   🔥 Overrides SOLO para Actividad (no afectan al dashboard)
+   🔥 Overrides SOLO para Actividad
    =============================== */
 .resumen-nutricional-dashboard.actividad-modulo {
   .resumen-linea {
@@ -231,47 +278,54 @@
    =============================== */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow-y: auto;
+  display: block;
+  padding: 64px 1rem 1rem;   /* simétrico en izquierda y derecha */
   z-index: 9999;
 }
 
+.modal,
 .modal-card {
+  position: relative;
+  margin: 0 auto;
   background: #fff;
   border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 360px;
-  width: 90%;
+  padding: 1rem;
+  width: 95%;                /* fluido */
+  max-width: 420px;          /* límite en pantallas grandes */
+  max-height: 80dvh;
+  overflow-y: auto;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 0.9rem;
 
-  h3 {
+  h3,
+  h4 {
     font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     color: #333;
   }
 
   p {
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.9rem;
     color: #444;
   }
 
   label {
     display: block;
-    margin: 0.5rem 0 0.2rem;
+    margin: 0.4rem 0 0.2rem;
     text-align: left;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   input {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.45rem;
     border: 1px solid #ccc;
     border-radius: 8px;
     margin-bottom: 0.5rem;
@@ -280,13 +334,15 @@
 
   .modal-botones {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     margin-top: 1rem;
+    gap: 0.5rem;
 
     button {
       flex: 1;
-      margin: 0 0.3rem;
-      padding: 0.6rem;
+      min-width: 0;
+      padding: 0.5rem;
+      font-size: 0.9rem;
       border: none;
       border-radius: 8px;
       font-weight: 600;
@@ -305,3 +361,84 @@
     }
   }
 }
+
+/* Modo fullscreen en móviles muy pequeños */
+@media (max-width: 400px) {
+  .modal,
+  .modal-card {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+  }
+}
+
+/* ===============================
+   🔥 Overrides para el Resumen de Actividades en Dashboard
+   =============================== */
+.resumen-actividades-dashboard,
+.resumen-nutricional-dashboard.plano {
+  .activity-line,
+  .resumen-linea {
+    .activity-name,
+    .resumen-nombre {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .activity-kcal,
+    .resumen-kcal {
+      font-weight: normal !important;
+      color: #222;
+    }
+  }
+
+  .total-kcal {
+    font-weight: bold;
+    color: #1d3a6e;
+  }
+}
+
+/* ===============================
+   🔹 Botón Cancelar en ActivityForm
+   =============================== */
+.cancelar-btn {
+  grid-column: span 2;
+  background-color: #e0e0e0;
+  color: #333;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #d5d5d5;
+    cursor: pointer;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* === Forzar fecha centrada en Actividad como en Nutrición === */
+.dashboard-main .selector-fecha {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100%;
+  margin: 0.5rem auto 1rem auto;
+}
+
+.dashboard-main .selector-fecha .label-fecha {
+  margin: 0 auto;
+  text-align: center;
+  width: auto;
+}
+
+
+
+
+
+

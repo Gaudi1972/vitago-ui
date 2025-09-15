@@ -4,14 +4,38 @@
   border-radius: 12px;
   padding: 1rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow-x: hidden;
   max-width: 600px;
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    background-color: #fff;
+  // 🔹 Barra de progreso arriba, siempre visible
+  .barra-scroll {
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    margin-bottom: 0.6rem; // espacio debajo de la barra
+    position: relative;
+    overflow: hidden;
+
+    .barra-scroll-progreso {
+      height: 100%;
+      background: #007bff;
+      width: 0%; // se actualiza dinámicamente
+      transition: width 0.1s linear;
+      animation: slideIn 0.4s ease-out; // 👈 animación de entrada
+    }
+  }
+
+  // 🔹 Scroll horizontal para tablas grandes
+  .tabla-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    table {
+      min-width: 480px;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background-color: #fff;
+    }
   }
 
   th,
@@ -44,15 +68,15 @@
     transition: color 0.2s ease-in-out;
 
     &.green {
-      color: #28a745; // verde positivo
+      color: #28a745;
     }
 
     &.amber {
-      color: #ff9900; // ámbar de atención
+      color: #ff9900;
     }
 
     &.red {
-      color: #cc0000; // rojo de alerta
+      color: #cc0000;
     }
   }
 
@@ -120,7 +144,7 @@
   }
 }
 
-// ✅ Popup contextual con entrada animada (sin fadeOut)
+// ✅ Popup contextual con entrada animada
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -177,6 +201,7 @@
   }
 }
 
+// 🔹 Animaciones
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -196,3 +221,16 @@
     background: rgba(0, 0, 0, 0.45);
   }
 }
+
+@keyframes slideIn {
+  from {
+    width: 0%;
+    opacity: 0;
+  }
+  to {
+    width: 0%; // empieza vacía pero visible
+    opacity: 1;
+  }
+}
+
+

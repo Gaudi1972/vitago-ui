@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import '../assets/Styles/Dashboard.scss';
 import { useAuth } from '../auth/AuthContext';
 import logo from '../assets/logo-vitagoBlanco.png';
-import { DateRange, Range, RangeKeyDict } from 'react-date-range';
+import { DateRange, RangeKeyDict } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import ActivityList from '../Components/ActivityList';
@@ -15,7 +15,10 @@ import { db } from '../firebaseConfig';
 import { obtenerRegistrosPorFecha } from '../Services/nutricionService';
 import FiltrosFecha from '../Components/FiltrosFecha';
 
-type Rango = 'hoy' | 'ayer' | 'semana' | '7dias' | 'personalizado';
+// ⬇️ Importamos el hook de contexto de fechas
+import { useFecha } from '../Context/FechaContext';
+// ⬇️ Importamos el helper unificado de formato
+import { formatNumber } from '../utils/formatNumber';
 
 const etiquetasObjetivo: Record<string, string> = {
   Mantener: 'Mantener peso',
@@ -30,18 +33,20 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const [showSplash, setShowSplash] = useState(() => sessionStorage.getItem('justLoggedIn') === 'true');
-  const [rangoSeleccionado, setRangoSeleccionado] = useState<Rango>('hoy');
-  const [mostrarCalendario, setMostrarCalendario] = useState(false);
-  const [rangoFechas, setRangoFechas] = useState<Range[]>([
-    { startDate: new Date(), endDate: new Date(), key: 'selection' }
-  ]);
   const [totalCalorias, setTotalCalorias] = useState(0);
   const [caloriasIngeridas, setCaloriasIngeridas] = useState(0);
   const [getUsuario, setGetUsuario] = useState(0);
   const [objetivoUsuario, setObjetivoUsuario] = useState('');
   const [refrescarDashboard, setRefrescarDashboard] = useState(false);
 
+  // ⬇️ NUEVO: estado para guardar los nutrientes ingeridos en el rango
+  const [totalesNutrientes, setTotalesNutrientes] = useState<Record<string, number>>({});
+
   const calendarioRef = useRef<HTMLDivElement | null>(null);
+
+  // 🔹 Estado global de fechas (compartido con Informes)
+  const { rangoSeleccionado, setRangoSeleccionado, rangoFechas, setRangoFechas } = useFecha();
+  const [mostrarCalendario, setMostrarCalendario] = useState(false);
 
   // 🔹 Restaurar isMobile
   const isMobile = window.innerWidth <= 768;
@@ -141,7 +146,10 @@ const Dashboard: React.FC = () => {
     fetchUserData();
   }, [user, ultimaActualizacion]);
 
-  const gastoTotal = getUsuario * calcularFechasAnalizadas().length + totalCalorias;
+  // 🔹 Guardamos fechasAnalizadas en constante para no recalcular varias veces
+  const fechasAnalizadas = calcularFechasAnalizadas();
+
+  const gastoTotal = getUsuario * fechasAnalizadas.length + totalCalorias;
   const balance = caloriasIngeridas - gastoTotal;
 
   const evaluarColorBalance = (
@@ -235,12 +243,13 @@ const Dashboard: React.FC = () => {
 
             <section className="dashboard-cards">
               <div className="card resumen-actividades fade-in delay-1">
-                <h2>Resumen de Actividades</h2>
+                <h2>🏃 Actividades</h2>
                 <div className="resumen-actividad-dashboard plano">
                   <ActivityList
-                    fecha={calcularFechasAnalizadas()[0]}
+                    fechaInicio={fechasAnalizadas[0]}
+                    fechaFin={fechasAnalizadas.slice(-1)[0]}
                     mostrarTitulo={false}
-                    mensajeVacio="No hay actividades físicas para esta fecha."
+                    mensajeVacio="No hay actividades físicas en este periodo."
                     refrescar={refrescarDashboard}
                     modoResumen={true}
                     onRefrescar={forzarRefresco}
@@ -249,31 +258,36 @@ const Dashboard: React.FC = () => {
               </div>
 
               <div className="card nutricion fade-in delay-2">
-                <h2>Nutrición</h2>
+                <h2>🍎 Nutrición</h2>
                 <ResumenNutricional
-                  fecha={calcularFechasAnalizadas()[0]}
+                  fechaInicio={fechasAnalizadas[0]}               // primera fecha del rango
+                  fechaFin={fechasAnalizadas.slice(-1)[0]}        // última fecha del rango
                   modoResumen={true}
                   claveActualizacion={refrescarDashboard ? Date.now() : 0}
                   onRefrescar={forzarRefresco}
+                  onTotalesPeriodo={(totales) => setTotalesNutrientes(totales)}
                 />
               </div>
 
               <div className="card resumen fade-in delay-3">
-                <h2>Balance calórico</h2>
+                <h2>⚖️ Balance calórico</h2>
                 <div className="resumen-linea">
-                  <span className="momento-nombre">🍽️ Ingerido:</span>
-                  <span className="momento-kcal">{Math.round(caloriasIngeridas)} kcal</span>
+                  <span className="momento-nombre"><strong>🍽️ Ingerido:</strong></span>
+                  <span className="momento-kcal">
+                    {formatNumber(caloriasIngeridas)} kcal
+                  </span>
                 </div>
                 <div className="resumen-linea">
-                  <span className="momento-nombre">🔥 Gastado:</span>
-                  <span className="momento-kcal">{Math.round(gastoTotal)} kcal</span>
+                  <span className="momento-nombre"><strong>🔥 Gastado:</strong></span>
+                  <span className="momento-kcal">
+                    {formatNumber(gastoTotal)} kcal
+                  </span>
                 </div>
-                <div className="resumen-sublinea">(GET x días + Actividad)</div>
                 <div className="resumen-linea balance-text">
                   <span className="momento-nombre balance-label">⚖️ Balance:</span>
                   <span className={`momento-kcal balance-valor balance-text-${balanceColorClass}`}>
                     {balance > 0 ? '+' : ''}
-                    {Math.round(balance)} kcal
+                    {formatNumber(balance)} kcal
                   </span>
                 </div>
               </div>
@@ -286,6 +300,11 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
+
+
+
+
 
 
 

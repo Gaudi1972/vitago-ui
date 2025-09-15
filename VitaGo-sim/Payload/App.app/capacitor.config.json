@@ -1,0 +1,10 @@
+{
+	"appId": "com.vitago.app",
+	"appName": "VitaGo",
+	"webDir": "dist",
+	"server": {
+		"url": "https://vitago.netlify.app",
+		"cleartext": true
+	},
+	"packageClassList": []
+}

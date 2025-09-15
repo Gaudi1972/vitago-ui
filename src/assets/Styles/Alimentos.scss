@@ -1,3 +1,16 @@
+/* === Paleta VitaGo === */
+$orange-lightest: #fef9f3;
+$orange-light:   #f8c471;
+$orange-base:    #f39c12;
+$orange-dark:    #e67e22;
+$orange-darker:  #ca6f1e;
+
+/* === Variables globales === */
+:root {
+  --header-height: 90px; /* se sobreescribe dinámicamente desde React */
+  --modal-offset: 70px;  /* margen extra debajo del header */
+}
+
 /* === Modal estilo semáforo === */
 .modal-overlay {
   position: fixed;
@@ -7,38 +20,104 @@
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
-  overflow-y: auto; /* ✅ permite hacer scroll si el modal es más alto que la pantalla */
+  overflow: hidden;
 }
 
 .modal-content {
-  position: relative; /* ✅ necesario para posicionar el botón flotante */
+  position: relative;
+  margin-top: calc(var(--header-height) + var(--modal-offset));
   background: #fff;
-  padding: 1.5rem;
   border-radius: 12px;
-  max-width: 450px;
   width: 95%;
-  max-height: 90vh;   /* ✅ evita que crezca más de la pantalla */
-  overflow-y: auto;   /* ✅ activa scroll dentro del modal */
+  max-width: 450px;
+
+  max-height: calc(100vh - var(--header-height) - var(--modal-offset) - 20px);
+  overflow-y: auto;
+
+  /* 👇 dejamos espacio para que el header no se solape con el contenido */
+  padding: 0 1.25rem 1.2rem 1.25rem;
+
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   animation: fadeInUp 0.3s ease;
   text-align: center;
+
+  font-size: 0.95rem;
+  line-height: 1.35;
+
+  .nota-informativa {
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 0.8rem;
+  }
 }
+
+
+/* === Cabecera modal con título y botón === */
+.modal-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  padding: 0.75rem 1rem;
+
+  /* 👇 este fondo tapa lo que pase detrás */
+  background-color: #fff;
+  background-clip: padding-box;
+
+  /* 👇 ocupar todo el ancho real del modal */
+  width: 100%;
+
+  /* 👇 fuerza nueva capa de renderizado */
+  transform: translateZ(0);
+  will-change: transform;
+
+  z-index: 100; /* más alto que el contenido */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+
+  h3 {
+    flex: 1;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+    text-align: left;
+  }
+
+  .modal-close {
+    background: transparent;
+    color: #666;
+    font-size: 1.3rem;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+    padding: 0 0.3rem;
+
+    &:hover { color: #e74c3c; }
+  }
+}
+
+
 
 @keyframes fadeInUp {
   from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* ✅ Caja destacada de calorías en plan semáforo */
+/* === Caja destacada calorías === */
 .calorias-box {
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-  padding: 14px;
+  margin: 0.5rem 0 1rem 0;
+  padding: 12px;
   border-radius: 10px;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -47,48 +126,37 @@
   color: #fff;
 }
 
-/* Estados específicos para calorías */
-.calorias-verde {
-  background: #2ecc71; /* Bajo en calorías */
-}
-.calorias-ambar {
-  background: #f1c40f; /* Moderado */
-  color: #333;
-}
-.calorias-rojo {
-  background: #e74c3c; /* Alto en calorías */
-}
-.calorias-gris {
-  background: #95a5a6; /* No disponible */
-}
+.calorias-verde { background: #2ecc71; }
+.calorias-ambar { background: #f1c40f; color: #333; }
+.calorias-rojo { background: #e74c3c; }
+.calorias-gris { background: #95a5a6; }
 
 .modal-content ul {
   list-style: none;
   padding: 0;
-  margin-top: 1rem;
+  margin-top: 0.8rem;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-/* Tarjeta de nutriente en plan semáforo */
 .nutriente-card {
   display: flex;
-  align-items: flex-start; /* ✅ permite varias líneas de texto */
+  align-items: flex-start;
   gap: 10px;
-  padding: 12px;
+  padding: 10px;
   border-radius: 8px;
   font-weight: 600;
   color: #fff;
   text-align: left;
+  font-size: 0.9rem;
 }
 
-/* Contenedor del valor + comentario */
 .nutriente-info {
   display: flex;
   flex-direction: column;
-  font-size: 0.95rem;
-  line-height: 1.3;
+  font-size: 0.9rem;
+  line-height: 1.25;
 }
 
 .nutriente-info small {
@@ -98,60 +166,322 @@
 }
 
 /* Estados semáforo */
-.estado-verde {
-  background: #2ecc71; /* verde */
-}
+.estado-verde { background: #2ecc71; }
+.estado-ambar { background: #f1c40f; color: #333; }
+.estado-rojo { background: #e74c3c; }
+.estado-gris { background: #95a5a6; }
 
-.estado-ambar {
-  background: #f1c40f; /* amarillo */
-  color: #333;
-}
+.nutriente-icon { font-size: 1.2rem; margin-top: 1px; }
 
-.estado-rojo {
-  background: #e74c3c; /* rojo */
-}
-
-.estado-gris {
-  background: #95a5a6; /* gris neutro */
-}
-
-/* Icono semáforo */
-.nutriente-icon {
-  font-size: 1.4rem;
-  margin-top: 2px;
-}
-
-/* Botón cerrar (parte inferior) */
+/* Botón cerrar inferior */
 .modal-content button {
-  margin-top: 1rem;
+  margin-top: 0.8rem;
   background: #002147;
   color: white;
-  padding: 0.6rem 1.2rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   transition: background 0.2s ease;
+  font-size: 0.9rem;
+}
+.modal-content button:hover { background: #004080; }
+
+/* === Buscador custom dentro del bloque ordenar === */
+.search-box {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  border: 2px solid $orange-light;
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 350px;
+
+  .search-icon {
+    margin-right: 0.5rem;
+    color: $orange-base;
+    flex-shrink: 0;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 0.95rem;
+    background: transparent;
+    color: #333;
+
+    &::placeholder {
+      color: #aaa;
+    }
+  }
 }
 
-.modal-content button:hover {
-  background: #004080;
+/* === Ordenador de nutrientes === */
+.ordenador-nutriente {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin: 1rem 0 1.5rem 0;
+  margin-left: 1.5rem;
+  max-width: 100%;
+
+  .ordenar-label {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .ordenar-controles {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .custom-select {
+    flex: 1;
+    max-width: 220px;
+
+    &__menu {
+      background: #fff;
+      border: 1.5px solid $orange-base;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      margin-top: 4px;
+      padding: 4px 0;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: auto;
+      z-index: 2000;
+      list-style: none;
+
+      max-height: 70vh;
+      overflow-y: auto;
+      min-width: 220px;
+      white-space: nowrap;
+    }
+  }
+
+  .custom-select__control {
+    padding: 0.45rem 0.7rem;
+  }
+
+  .custom-select__value {
+    font-size: 0.9rem;
+  }
+
+  .custom-select__chevron {
+    width: 7px;
+    height: 7px;
+    margin-left: 4px;
+  }
+
+  .custom-select__option {
+    list-style: none;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+
+    &:hover { background: $orange-lightest; }
+
+    &.selected {
+      background: $orange-light;
+      font-weight: 600;
+      color: #000;
+    }
+  }
+
+  .custom-select__tick {
+    margin-left: 8px;
+    color: $orange-dark;
+    font-weight: 700;
+  }
+
+  .orden-botones {
+    display: flex;
+    flex-direction: row;
+    gap: 0.35rem;
+    align-items: center;
+    flex-shrink: 0;
+
+    .btn-orden {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1.5px solid $orange-base;
+      background: #fff;
+      color: #000;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        width: 14px;
+        height: 14px;
+        stroke: $orange-dark;
+        stroke-width: 2;
+        fill: none;
+      }
+
+      &:hover { background: $orange-lightest; }
+      &.activo {
+        background: $orange-base;
+        border-color: $orange-dark;
+        svg { stroke: #fff; }
+      }
+    }
+  }
 }
 
-/* ✅ Botón flotante arriba derecha */
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  color: #666;
-  font-size: 1.4rem;
-  border: none;
-  cursor: pointer;
-  transition: color 0.2s ease;
+/* === Custom Select con overlay === */
+.custom-select {
+  position: relative;
+  height: 42px;
+
+  &__control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 0.9rem;
+    border-radius: 10px;
+    border: 1.5px solid $orange-base;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+
+    &:hover { background: $orange-lightest; }
+    &.open,
+    &:focus-visible {
+      border-color: $orange-dark;
+      box-shadow: 0 0 6px rgba(243, 156, 18, 0.4);
+    }
+  }
+
+  &__value {
+    font-size: 0.92rem;
+    color: #000;
+    font-weight: 600;
+  }
+
+  &__chevron {
+    border-right: 2px solid #000;
+    border-bottom: 2px solid #000;
+    transform: rotate(45deg);
+    width: 8px;
+    height: 8px;
+    margin-left: 6px;
+  }
+
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(2px);
+    z-index: 90;
+  }
+
+  &__tick { color: $orange-dark; font-weight: 700; }
 }
 
-.modal-close:hover {
-  color: #e74c3c;
+/* === Lista de alimentos === */
+.lista-alimentos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  li {
+    font-size: 0.9rem;
+    line-height: 1.25;
+    padding: 0.15rem 0;
+    cursor: pointer;
+
+    .fila-alimento {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 0.4rem;
+    }
+
+    .col-izq {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .indice {
+      font-weight: 600;
+      color: #555;
+      min-width: 24px;
+      text-align: right;
+    }
+
+    .texto {
+      flex: 1;
+      color: #222;
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .col-der {
+      flex: 0 0 auto;
+      color: #666;
+      font-size: 0.82rem;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    &.vacio {
+      color: #999;
+      font-style: italic;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+  }
 }
+
+/* === Utilidad accesible: solo lectores de pantalla === */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+
+
+
+
+
+
+
+
+
 

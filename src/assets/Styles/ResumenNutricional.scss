@@ -11,11 +11,10 @@
     justify-content: space-between;
     align-items: center;
     font-size: 1rem;
-    font-weight: 600;
     padding: 0.3rem 0;
 
     .momento-nombre {
-      font-weight: bold !important;
+      font-weight: 600;
       color: #333;
       display: flex;
       align-items: center;
@@ -23,14 +22,16 @@
     }
 
     .momento-kcal {
-      font-weight: bold !important;
+      font-weight: normal;
       color: #222;
       font-variant-numeric: tabular-nums;
     }
   }
-.bloque-momento {
-  margin-bottom: 1.25rem; // 👈 ajusta aquí el espacio entre bloques
-}
+
+  .bloque-momento {
+    margin-bottom: 1.25rem;
+  }
+
   .detalle-alimentos {
     list-style: none;
     padding-left: 0;
@@ -43,7 +44,7 @@
       column-gap: 0.75rem;
       font-size: 0.85rem;
       padding: 0.25rem 0;
-      margin-left: 0.75rem; // sangrado leve
+      margin-left: 0.75rem;
 
       .alimento-nombre {
         color: #333;
@@ -111,27 +112,30 @@
   }
 }
 
+/* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
+  z-index: 999999;
+  min-height: 100dvh;
 }
 
 .modal {
+  position: fixed;
+  top: 50dvh;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: #fff;
   padding: 1.5rem;
   border-radius: 10px;
   width: 320px;
   max-width: 90%;
+  max-height: 90dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.3s ease-in-out;
+  animation: modalIn 0.28s ease-out;
   text-align: center;
 
   h4 {
@@ -148,45 +152,153 @@
     border-radius: 5px;
   }
 
-  button {
-    padding: 0.5rem 1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    margin: 0.25rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s ease-in-out;
+  /* ===== Selector Gramos / Unidad ===== */
+  .modo-selector {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 1rem 0;
 
-    &:first-of-type {
-      background-color: #4CAF50;
-      color: white;
+    button {
+      flex: 1;
+      height: 48px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+      background: #e0e0e0;
+      color: #333;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
 
-      &:hover {
-        background-color: #45a047;
+      &.activo {
+        background: #4CAF50;
+        color: #fff;
       }
+
+      &:hover:not(.activo) { background: #d5d5d5; }
+      &:active { transform: scale(0.96); }
+    }
+  }
+
+  /* ===== Stepper (input + - / +) ===== */
+  .stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.5rem auto 1rem auto;
+    max-width: 220px;
+
+    button {
+      flex: 0 0 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      background: #4CAF50;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+
+      &:hover { background: #45a047; }
+      &:active { transform: scale(0.95); }
     }
 
-    &:last-of-type {
-      background-color: #ccc;
+    input {
+      flex: 1;
+      max-width: 100px;
+      text-align: center;
+      height: 48px;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
 
-      &:hover {
-        background-color: #b3b3b3;
-      }
+      &:focus { border-color: #ff7f00; }
     }
+  }
+
+  /* ===== Botones Guardar / Cancelar ===== */
+  .acciones-modal {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 1rem;
+
+    button {
+      flex: 1;
+      height: 48px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      transition: background 0.2s ease, transform 0.1s ease;
+
+      &:active { transform: scale(0.96); }
+    }
+
+    button:first-of-type {
+      background: #4CAF50;
+      color: #fff;
+      &:hover { background: #45a047; }
+    }
+
+    button:last-of-type {
+      background: #ccc;
+      color: #333;
+      &:hover { background: #b3b3b3; }
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 95%;
+    padding: 1rem;
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* Fallback para navegadores sin dvh */
+@supports not (height: 100dvh) {
+  .modal { top: 50vh; max-height: 90vh; }
 }
 
+/* ===== Animación ===== */
+@keyframes modalIn {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 24px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
 
+/* === Overrides kcal === */
+.resumen-nutricional-dashboard .resumen-linea {
+  font-weight: 400;
+}
+
+.resumen-nutricional-dashboard .resumen-linea .momento-nombre {
+  font-weight: 600;
+}
+
+.resumen-nutricional-dashboard .resumen-linea .momento-kcal,
+.resumen-nutricional-dashboard .resumen-linea .momento-kcal * {
+  font-weight: 400 !important;
+}
 

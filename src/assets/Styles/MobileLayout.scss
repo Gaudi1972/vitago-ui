@@ -1,0 +1,88 @@
+/* Variables globales */
+:root {
+  --header-height: 60px;   
+  --tabs-height: 50px;     
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+#root, .App {
+  height: 100%;
+}
+
+.mobile-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+/* Contenido scrolleable */
+.mobile-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+
+  padding-top: calc(var(--header-height) + var(--tabs-height));
+}
+
+/* 🔹 Filtros de fecha responsive */
+.filtros-periodo-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.3rem;
+  padding: 0 0.3rem;
+  -webkit-overflow-scrolling: touch;
+
+  button {
+    flex: 0 0 auto;
+    min-width: 58px;
+    max-width: 75px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 5px;
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+/* 📱 Móviles más grandes (>= 400px) */
+@media (min-width: 400px) {
+  .filtros-periodo-scroll button {
+    min-width: 70px;
+    max-width: 90px;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.6rem;
+  }
+}
+
+/* 📱 Tablets (>= 600px) */
+@media (min-width: 600px) {
+  .filtros-periodo-scroll button {
+    min-width: 85px;
+    max-width: 110px;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.7rem;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

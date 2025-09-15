@@ -13,7 +13,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import EvaluacionNutricional from '../Components/EvaluacionNutricional';
 
-type Rango = 'hoy' | 'ayer' | 'semana' | '7dias' | 'personalizado';
+// ⬇️ Importamos el hook de contexto de fechas
+import { useFecha } from '../Context/FechaContext';
 
 const etiquetasObjetivo: Record<string, string> = {
   Mantener: 'Mantener peso',
@@ -25,11 +26,10 @@ const etiquetasObjetivo: Record<string, string> = {
 
 const Informes: React.FC = () => {
   const { user, ultimaActualizacion } = useAuth();
-  const [rangoSeleccionado, setRangoSeleccionado] = useState<Rango>('hoy');
+
+  // 🔹 Estado global de fechas (compartido con Dashboard)
+  const { rangoSeleccionado, setRangoSeleccionado, rangoFechas, setRangoFechas } = useFecha();
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
-  const [rangoFechas, setRangoFechas] = useState([
-    { startDate: new Date(), endDate: new Date(), key: 'selection' }
-  ]);
 
   const [datosNutrientes, setDatosNutrientes] = useState<any[]>([]);
   const [calorias, setCalorias] = useState({ ingerido: 0, quemado: 0, get: 0 });
@@ -37,8 +37,6 @@ const Informes: React.FC = () => {
   const [alimentosPeriodo, setAlimentosPeriodo] = useState<any[]>([]);
   const [objetivoUsuario, setObjetivoUsuario] = useState('');
   const calendarioRef = useRef<HTMLDivElement | null>(null);
-
-  const isMobile = window.innerWidth <= 768;
 
   const aplicarPeriodoPersonalizado = () => {
     setMostrarCalendario(false);
@@ -130,7 +128,7 @@ const Informes: React.FC = () => {
         const registros = await obtenerRegistrosPorFecha(user.uid, fecha);
         const alimentos = registros.flatMap(r => r.alimentos || []);
         if (alimentos.length > 0) {
-          diasConRegistros++;
+          diasConRegistros++; // ✅ solo contamos días con registros
           alimentosAcumulados.push(...alimentos);
 
           alimentos.forEach(al => {
@@ -158,17 +156,18 @@ const Informes: React.FC = () => {
         new Date().toISOString().split('T')[0]
       );
 
+      // ✅ usamos diasConRegistros para todo
       setDatosNutrientes([
-        { nutriente: 'Proteínas',     ingerido: totales.proteinas || 0, recomendado: promedio.proteinas * diasConRegistros },
-        { nutriente: 'Hidratos.C',    ingerido: totales.hidratos || 0, recomendado: promedio.hidratos * diasConRegistros },
-        { nutriente: 'Grasas',        ingerido: totales.grasas || 0, recomendado: promedio.grasas * diasConRegistros },
-        { nutriente: 'G. Saturadas',  ingerido: totales.grasassaturadas || 0, recomendado: promedio.grasasSaturadas * diasConRegistros },
-        { nutriente: 'Azúcares',      ingerido: totales.azucares || 0, recomendado: promedio.azucares * diasConRegistros },
-        { nutriente: 'Fibra',         ingerido: totales.fibra || 0, recomendado: promedio.fibra * diasConRegistros },
-        { nutriente: 'Hierro',        ingerido: totales.hierro || 0, recomendado: promedio.hierro * diasConRegistros },
-        { nutriente: 'Calcio',        ingerido: totales.calcio || 0, recomendado: promedio.calcio * diasConRegistros },
-        { nutriente: 'Sodio',         ingerido: totales.sodio || 0, recomendado: promedio.sodio * diasConRegistros },
-        { nutriente: 'Potasio',       ingerido: totales.potasio || 0, recomendado: promedio.potasio * diasConRegistros },
+        { nutriente: 'Proteínas',     ingerido: totales.proteinas || 0,         recomendado: promedio.proteinas * diasConRegistros },
+        { nutriente: 'Hidratos.C',    ingerido: totales.hidratos || 0,          recomendado: promedio.hidratos * diasConRegistros },
+        { nutriente: 'Grasas',        ingerido: totales.grasas || 0,            recomendado: promedio.grasas * diasConRegistros },
+        { nutriente: 'G. Saturadas',  ingerido: totales.grasassaturadas || 0,   recomendado: promedio.grasasSaturadas * diasConRegistros },
+        { nutriente: 'Azúcares',      ingerido: totales.azucares || 0,          recomendado: promedio.azucares * diasConRegistros },
+        { nutriente: 'Fibra',         ingerido: totales.fibra || 0,             recomendado: promedio.fibra * diasConRegistros },
+        { nutriente: 'Hierro',        ingerido: totales.hierro || 0,            recomendado: promedio.hierro * diasConRegistros },
+        { nutriente: 'Calcio',        ingerido: totales.calcio || 0,            recomendado: promedio.calcio * diasConRegistros },
+        { nutriente: 'Sodio',         ingerido: totales.sodio || 0,             recomendado: promedio.sodio * diasConRegistros },
+        { nutriente: 'Potasio',       ingerido: totales.potasio || 0,           recomendado: promedio.potasio * diasConRegistros },
       ]);
 
       setAlimentosPeriodo(alimentosAcumulados);
@@ -180,7 +179,6 @@ const Informes: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      {/* 🔹 Unificado: usamos dashboard-main igual que el resto */}
       <main className="dashboard-main">
         {objetivoUsuario && (
           <div className="objetivo-banner fade-in delay-1">
@@ -225,25 +223,36 @@ const Informes: React.FC = () => {
           </div>
         )}
 
-        <div className="tarjeta-con-titulo">
-          <BalanceCalorico
-            ingerido={calorias.ingerido}
-            quemado={calorias.quemado}
-            get={calorias.get}
-            objetivo={objetivoUsuario}
-          />
-        </div>
+        {/* 🔹 Unificamos estructura de tarjetas con Dashboard */}
+        <section className="dashboard-cards">
+          <div className="card fade-in delay-1">
+            <h2>⚖️ Balance calórico</h2>
+            <BalanceCalorico
+              ingerido={Math.round(calorias.ingerido)}
+              quemado={Math.round(calorias.quemado)}
+              get={Math.round(calorias.get)}
+              objetivo={objetivoUsuario}
+            />
+          </div>
 
-        <div className="tarjeta-con-titulo">
-          <EvaluacionNutricional
-            datos={datosNutrientes}
-            fechasAnalizadas={fechasAnalizadas}
-            alimentosPeriodo={alimentosPeriodo}
-          />
-        </div>
+          <div className="card fade-in delay-2">
+            <h2>🍽️ Evaluación de nutrientes</h2>
+            <EvaluacionNutricional
+              datos={datosNutrientes}
+              fechasAnalizadas={fechasAnalizadas}
+              alimentosPeriodo={alimentosPeriodo}
+            />
+          </div>
+        </section>
       </main>
     </div>
   );
 };
 
 export default Informes;
+
+
+
+
+
+

@@ -295,11 +295,28 @@ html, body {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       width: 100%;
 
+          /* Optimización scroll */
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: transform;
+    contain: paint layout style;
+
+    /* Sombra más ligera en móviles */
+    @media (max-width: 768px) {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+
       h2 {
-        font-size: 1.1rem;
-        line-height: 1.2;
-        text-align: center;
-        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+        line-height: 1.3;
+        font-weight: 600;
+        color: #333;           // 👈 gris oscuro elegante
+        display: flex;         // 👈 icono + texto alineados
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;           // 👈 espacio entre emoji y texto
+        margin-bottom: 0.75rem;
       }
 
       p {
@@ -656,9 +673,17 @@ input[type="date"] {
 
 .fade-in {
   opacity: 0;
-  transform: translateY(10px);
-  animation: fadeSlideIn 0.6s ease forwards;
+  transform: translateY(8px);
+  animation: fadeIn 0.3s ease-out forwards;
 }
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 .title-animate {
   opacity: 0;
@@ -868,6 +893,13 @@ input[type="date"] {
   gap: 0.75rem;                 // ✅ separación visual
 }
 
+.resumen-actividad-dashboard {
+  max-height: 400px;              /* limita altura */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+
 
 .activity-card {
   background: #f9f9f9;
@@ -909,7 +941,7 @@ input[type="date"] {
   .activity-kcal {
     font-weight: 600;
     color: #444;
-    font-variant-numeric: tabular-nums;
+    // font-variant-numeric: tabular-nums;
     min-width: 60px;
     text-align: right;
   }
@@ -1092,7 +1124,7 @@ input[type="date"] {
 
     .momento-kcal {
       color: #555;
-      font-variant-numeric: tabular-nums;
+      // font-variant-numeric: tabular-nums;
       min-width: 60px;
       text-align: right;
     }

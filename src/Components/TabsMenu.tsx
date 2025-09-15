@@ -6,7 +6,7 @@ import useIsMobile from '../hooks/useIsMobile';
 
 const tabs = [
   { path: '/acerca', label: 'ℹ️ Acerca' },
-  { path: '/dashboard', label: '🏠 Dashboard' },
+  { path: '/dashboard', label: '🏠 Resumen' },
   { path: '/informes', label: '📊 Informes' },
   { path: '/actividad', label: '🏃 Actividad' },
   { path: '/nutricion', label: '🍎 Nutrición' },

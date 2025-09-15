@@ -1,0 +1,55 @@
+.acerca-container {
+  padding: 2rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #333;
+  overflow: visible; // no bloquea scroll
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: #222;
+    text-align: center;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #444;
+  }
+
+  p {
+    text-align: left;   // mejor rendimiento que justify
+    margin-bottom: 1rem;
+    line-height: 1.6;   // antes estaba incompleto
+  }
+
+  ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+  }
+
+  a {
+    color: #007acc;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+
+
+
+
+
+
+

@@ -20,9 +20,12 @@ import Nutricion from './pages/Nutricion';
 import Informes from './pages/Informes';
 import Alimentos from './pages/Alimentos';
 import Acerca from './pages/Acerca';
-import TabsMenu from './Components/TabsMenu';
 import PrivateRoute from './pages/PrivateRoute';
-import MobileLayout from './Components/Mobilelayout'; // 👈 nuevo layout
+import MobileLayout from './Components/Mobilelayout';
+import Perfil from './pages/Perfil';
+
+// ⬇️ Importamos el proveedor de fechas
+import { FechaProvider } from './Context/FechaContext';
 
 // ✅ Rutas que participan en el scroll horizontal
 const pages = [
@@ -34,24 +37,15 @@ const pages = [
   { path: '/alimentos', component: <PrivateRoute><Alimentos /></PrivateRoute> },
 ];
 
-// ✅ Componente que sincroniza scroll horizontal con la ruta actual
 const ScrollRouter: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const paths = pages.map(p => p.path);
 
-  const fechaTexto = new Date().toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     const index = paths.indexOf(location.pathname);
     if (index >= 0) {
       container.scrollTo({
@@ -64,7 +58,6 @@ const ScrollRouter: React.FC = () => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     let timeout: NodeJS.Timeout;
     const handleScroll = () => {
       clearTimeout(timeout);
@@ -78,13 +71,12 @@ const ScrollRouter: React.FC = () => {
         }
       }, 100);
     };
-
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [navigate, location.pathname]);
 
   return (
-    <MobileLayout fechaTexto={fechaTexto}>
+    <MobileLayout>
       <div className="scroll-container" ref={containerRef}>
         {pages.map((page) => (
           <div key={page.path} className="scroll-section">
@@ -99,19 +91,24 @@ const ScrollRouter: React.FC = () => {
 // ✅ App principal
 const App = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<WelcomeScreen />} />
-        <Route path="/registro" element={<RegistroUsuario />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/recuperar" element={<RecuperarContraseña />} />
-        <Route path="*" element={<ScrollRouter />} />
-      </Routes>
-    </BrowserRouter>
+    <FechaProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<WelcomeScreen />} />
+          <Route path="/registro" element={<RegistroUsuario />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/recuperar" element={<RecuperarContraseña />} />
+          <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
+          <Route path="*" element={<ScrollRouter />} />
+        </Routes>
+      </BrowserRouter>
+    </FechaProvider>
   );
 };
 
 export default App;
+
+
 
 
 

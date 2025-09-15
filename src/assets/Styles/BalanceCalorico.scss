@@ -14,19 +14,33 @@
     color: #333;
   }
 
-  ul {
-    list-style: none;
-    padding: 0;
+  .linea {
+    display: flex;
+    justify-content: space-between; // etiqueta izq, valor dcha
+    align-items: center;
+    padding: 0.35rem 0;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #f0f0f0;
 
-    li {
-      margin-bottom: 0.4rem;
-      font-size: 0.95rem;
+    &:last-child {
+      border-bottom: none;
+    }
 
-      strong {
-        font-weight: 600;
-        display: inline-block;
-        width: 140px;
-      }
+    .label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .valor {
+      font-weight: 500;
+      color: #444;
+      text-align: right;
+      min-width: 80px; // asegura alineación estable
     }
   }
+
+  .balance-text-verde { color: #4caf50; font-weight: 600; }
+  .balance-text-ambar { color: #ff9800; font-weight: 600; }
+  .balance-text-rojo  { color: #f44336; font-weight: 600; }
 }
+

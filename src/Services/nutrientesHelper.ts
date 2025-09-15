@@ -3,11 +3,34 @@ interface EvaluacionNutriente {
   valor: number;
   estado: "verde" | "ambar" | "rojo" | "gris";
   comentario: string;
-  unidad: string; // ✅ añadimos unidad
+  unidad: string;
 }
 
 export function evaluarAporteNutricional(alimento: any) {
   const resultados: Record<string, EvaluacionNutriente> = {};
+
+  // ⚡ Calorías (basado en semáforo UK, comentarios granulares)
+  const kcal = alimento["Calorías por 100g"] || alimento["Calorias por 100g"] || 0;
+  let comentarioCal = "";
+
+  if (kcal < 40) {
+    comentarioCal = "Muy bajo en calorías.";
+  } else if (kcal < 100) {
+    comentarioCal = "Bajo en calorías.";
+  } else if (kcal <= 250) {
+    comentarioCal = "Alto en calorías.";
+  } else if (kcal <= 400) {
+    comentarioCal = "Muy alto en calorías.";
+  } else {
+    comentarioCal = "Extremadamente alto en calorías.";
+  }
+
+  resultados["Calorías"] = {
+    valor: kcal,
+    estado: kcal < 40 ? "verde" : kcal < 100 ? "ambar" : "rojo",
+    comentario: comentarioCal,
+    unidad: "kcal",
+  };
 
   // ⚡ Proteínas
   const prot = alimento["Proteínas (g)"] || alimento["Proteinas (g)"] || 0;
@@ -19,9 +42,21 @@ export function evaluarAporteNutricional(alimento: any) {
         ? "Alto en proteínas, buena fuente."
         : prot >= 5
         ? "Fuente moderada de proteínas."
-        : "No es una fuente relevante de proteínas.",
+        : "Aporte irrelevante (≈ 0)",
     unidad: "g",
   };
+
+  // ⚡ Hidratos de carbono (informativo, sin semáforo)
+  const hidratos = alimento["Hidratos de carbono (g)"] || alimento["Carbohidratos (g)"];
+  if (hidratos !== undefined) {
+    resultados["Hidratos de carbono"] = {
+      valor: hidratos,
+      estado: "gris", // siempre gris: neutro
+      comentario:
+        "Dato informativo: incluye tanto almidones como azúcares. La calidad depende del aporte de fibra y del contenido de azúcares.",
+      unidad: "g",
+    };
+  }
 
   // ⚡ Fibra
   const fibra = alimento["Fibra (g)"] || 0;
@@ -33,7 +68,7 @@ export function evaluarAporteNutricional(alimento: any) {
         ? "Alto contenido en fibra."
         : fibra >= 3
         ? "Fuente de fibra."
-        : "Aporte bajo de fibra.",
+        : "Aporte irrelevante (≈ 0)",
     unidad: "g",
   };
 
@@ -101,7 +136,7 @@ export function evaluarAporteNutricional(alimento: any) {
     comentario:
       calcio >= 120
         ? "Fuente adecuada de calcio."
-        : "Aporte bajo de calcio.",
+        : "Aporte irrelevante (≈ 0)",
     unidad: "mg",
   };
 
@@ -113,7 +148,7 @@ export function evaluarAporteNutricional(alimento: any) {
     comentario:
       hierro >= 2.1
         ? "Fuente adecuada de hierro."
-        : "Aporte bajo de hierro.",
+        : "Aporte irrelevante (≈ 0)",
     unidad: "mg",
   };
 
@@ -125,23 +160,13 @@ export function evaluarAporteNutricional(alimento: any) {
     comentario:
       potasio >= 300
         ? "Fuente adecuada de potasio."
-        : "Aporte bajo de potasio.",
+        : "Aporte irrelevante (≈ 0)",
     unidad: "mg",
-  };
-
-  // ⚡ Calorías
-  const kcal = alimento["Calorías por 100g"] || alimento["Calorias por 100g"] || 0;
-  resultados["Calorías"] = {
-    valor: kcal,
-    estado: kcal < 40 ? "verde" : kcal < 100 ? "ambar" : "rojo",
-    comentario:
-      kcal < 40
-        ? "Muy bajo en calorías."
-        : kcal < 100
-        ? "Bajo en calorías."
-        : "Aporte energético moderado/alto.",
-    unidad: "kcal",
   };
 
   return resultados;
 }
+
+
+
+

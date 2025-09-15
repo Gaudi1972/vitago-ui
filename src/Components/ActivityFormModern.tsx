@@ -1,40 +1,19 @@
+// src/Components/ActivityFormModern.tsx
 import '../assets/Styles/ActivityFormModern.scss';
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  IconActivity,
-  IconWalk,
-  IconBike,
-  IconBikeOff,
-  IconWeight,
-  IconMountain,
-  IconMap,
-  IconShoe,
-} from '@tabler/icons-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { es } from 'date-fns/locale';
-
-import { guardarActividad } from '../Firebase/firestoreService';
+import React, { useState, useEffect } from 'react';
+import { guardarActividad, editarActividad, ActividadFisica } from '../Firebase/firestoreService';
 import { getAuth } from 'firebase/auth';
-import '../assets/Styles/CarruselComun.scss';
 import { useAuth } from '../auth/AuthContext';
 
 interface Props {
-  fecha: string;
+  fecha: string; // formato YYYY-MM-DD
   onFechaChange: (nuevaFecha: string) => void;
   onActividadGuardada: () => void;
+  onCancel?: () => void;
+  onFormStateChange?: (activo: boolean) => void;
+  actividadInicial?: ActividadFisica | null;
+  actividadSeleccionada?: string | null; // 👈 nueva prop
 }
-
-const activityOptions = [
-  { value: 'correr', label: 'Correr', icon: <IconActivity size={24} /> },
-  { value: 'caminata', label: 'Caminata', icon: <IconWalk size={24} /> },
-  { value: 'bici_btt', label: 'Bicicleta BTT', icon: <IconBikeOff size={24} /> },
-  { value: 'bici_carretera', label: 'Bicicleta carretera', icon: <IconBike size={24} /> },
-  { value: 'fuerza', label: 'Fuerza', icon: <IconWeight size={24} /> },
-  { value: 'trail_running', label: 'Trail Running', icon: <IconMountain size={24} /> },
-  { value: 'trekking', label: 'Trekking', icon: <IconMap size={24} /> },
-  { value: 'pasos_diarios', label: 'Pasos diarios', icon: <IconShoe size={24} /> },
-];
 
 const MET_VALUES: Record<string, number> = {
   correr: 9,
@@ -46,13 +25,16 @@ const MET_VALUES: Record<string, number> = {
   trekking: 7,
 };
 
-const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividadGuardada }) => {
+const ActivityFormModern: React.FC<Props> = ({
+  fecha,
+  onActividadGuardada,
+  onCancel,
+  onFormStateChange,
+  actividadInicial,
+  actividadSeleccionada, // 👈 recibimos prop
+}) => {
   const { perfil, refrescarDatos } = useAuth();
   const [actividad, setActividad] = useState<string | null>(null);
-
-  const botonesRef = useRef<(HTMLDivElement | null)[]>([]);
-
-  const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [duracion, setDuracion] = useState('');
   const [ppm, setPPM] = useState('');
   const [ritmo, setRitmo] = useState('');
@@ -61,17 +43,31 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
   const [usarCaloriasManuales, setUsarCaloriasManuales] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
-  const fechaTexto = new Date(fecha).toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-
+  // 🔹 Precargar datos si estamos editando
   useEffect(() => {
-    const btn = botonesRef.current[0];
-    btn?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  }, []);
+    if (actividadInicial) {
+      setActividad(actividadInicial.tipo);
+      setDuracion(actividadInicial.duracion?.toString() || '');
+      setPPM(actividadInicial.ppm?.toString() || '');
+      setRitmo(actividadInicial.ritmo || '');
+      setPasos(
+        actividadInicial.tipo === 'pasos_diarios'
+          ? ((actividadInicial.calorias || 0) / 0.04).toFixed(0)
+          : ''
+      );
+      setCalorias(actividadInicial.calorias?.toString() || '');
+      setUsarCaloriasManuales(true);
+      onFormStateChange?.(true);
+    }
+  }, [actividadInicial, onFormStateChange]);
+
+  // 🔹 Inicializar cuando viene del carrusel
+  useEffect(() => {
+    if (actividadSeleccionada) {
+      setActividad(actividadSeleccionada);
+      onFormStateChange?.(true);
+    }
+  }, [actividadSeleccionada, onFormStateChange]);
 
   useEffect(() => {
     if (actividad === 'pasos_diarios' && pasos) {
@@ -96,9 +92,13 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
     if (!isNaN(duracionMin) && !isNaN(pesoKg)) {
       if (!isNaN(ppmValor) && perfil?.sexo && perfil?.fechaNacimiento) {
         if (sexo === 'M') {
-          kcal = ((-55.0969 + (0.6309 * ppmValor) + (0.1988 * pesoKg) + (0.2017 * edad)) / 4.184) * duracionMin;
+          kcal =
+            ((-55.0969 + 0.6309 * ppmValor + 0.1988 * pesoKg + 0.2017 * edad) / 4.184) *
+            duracionMin;
         } else {
-          kcal = ((-20.4022 + (0.4472 * ppmValor) - (0.1263 * pesoKg) + (0.074 * edad)) / 4.184) * duracionMin;
+          kcal =
+            ((-20.4022 + 0.4472 * ppmValor - 0.1263 * pesoKg + 0.074 * edad) / 4.184) *
+            duracionMin;
         }
       } else if (MET) {
         const duracionHoras = duracionMin / 60;
@@ -110,6 +110,17 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
     }
   }, [actividad, duracion, ppm, perfil, usarCaloriasManuales]);
 
+  const limpiarFormulario = () => {
+    setActividad(null);
+    setDuracion('');
+    setPPM('');
+    setRitmo('');
+    setPasos('');
+    setCalorias('');
+    setUsarCaloriasManuales(false);
+    onFormStateChange?.(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -118,27 +129,32 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
       if (!user) throw new Error('No autenticado');
       if (!actividad) throw new Error('No se ha seleccionado ninguna actividad');
 
-      await guardarActividad(user.uid, {
-        tipo: actividad,
-        duracion: parseInt(duracion),
-        ppm: parseInt(ppm),
-        ritmo,
-        calorias: parseInt(calorias),
-        fecha,
-      });
+      if (actividadInicial && actividadInicial.id) {
+        await editarActividad(user.uid, actividadInicial.id, {
+          tipo: actividad,
+          duracion: parseInt(duracion),
+          ppm: parseInt(ppm),
+          ritmo,
+          calorias: parseInt(calorias),
+          fecha,
+        });
+        setMensaje('✅ Actividad actualizada');
+      } else {
+        await guardarActividad(user.uid, {
+          tipo: actividad,
+          duracion: parseInt(duracion),
+          ppm: parseInt(ppm),
+          ritmo,
+          calorias: parseInt(calorias),
+          fecha,
+        });
+        setMensaje('✅ Actividad registrada');
+      }
 
-      setMensaje('✅ Actividad registrada');
       onActividadGuardada?.();
       refrescarDatos();
 
-      setActividad(null);
-      setDuracion('');
-      setPPM('');
-      setRitmo('');
-      setPasos('');
-      setCalorias('');
-      setUsarCaloriasManuales(false);
-
+      limpiarFormulario();
       setTimeout(() => setMensaje(''), 3000);
     } catch (error) {
       setMensaje('❌ Error al guardar');
@@ -148,47 +164,8 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
 
   return (
     <form className="actividad-form-modern" onSubmit={handleSubmit}>
-      <div className="carousel-comidas">
-        {activityOptions.map((opt, i) => (
-          <div
-            key={opt.value}
-            ref={(el) => { botonesRef.current[i] = el; }}
-            className={`card-comida ${actividad === opt.value ? 'activo' : ''}`}
-            onClick={() => setActividad(opt.value)}
-          >
-            {opt.icon}
-            <span>{opt.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="selector-fecha">
-        <div className="label-fecha" onClick={() => setMostrarCalendario(true)}>
-          📅 {fechaTexto}
-          <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem' }}>▼</span>
-        </div>
-      </div>
-
-      {mostrarCalendario && (
-        <div className="modal-overlay" onClick={() => setMostrarCalendario(false)}>
-          <div className="modal-calendario" onClick={(e) => e.stopPropagation()}>
-            <DatePicker
-              selected={new Date(fecha)}
-              onChange={(date: Date | null) => {
-                if (!date) return;
-                const nuevaFecha = date.toISOString().split('T')[0];
-                onFechaChange(nuevaFecha);
-                setMostrarCalendario(false);
-              }}
-              inline
-              locale={es}
-            />
-          </div>
-        </div>
-      )}
-
       {actividad && (
-        <div className="card-actividad">{/* 🔹 Nuevo wrapper tipo tarjeta */}
+        <div className="card-actividad">
           <section className="formulario-actividad">
             {actividad !== 'pasos_diarios' && (
               <>
@@ -260,18 +237,25 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
 
                 <label>🔥 Calorías:</label>
                 <div className="input-icon-wrapper">
-                  <input
-                    type="number"
-                    value={calorias}
-                    readOnly
-                  />
+                  <input type="number" value={calorias} readOnly />
                 </div>
               </>
             )}
 
-            <button className="guardar-btn" type="submit">
-              Guardar actividad
-            </button>
+            <div className="acciones">
+              <button className="guardar-btn" type="submit">
+                {actividadInicial ? 'Actualizar' : 'Guardar'}
+              </button>
+              {onCancel && (
+                <button
+                  type="button"
+                  className="cancelar-btn"
+                  onClick={() => { limpiarFormulario(); onCancel(); }}
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
           </section>
         </div>
       )}
@@ -280,4 +264,9 @@ const ActivityFormModern: React.FC<Props> = ({ fecha, onFechaChange, onActividad
 };
 
 export default ActivityFormModern;
+
+
+
+
+
 

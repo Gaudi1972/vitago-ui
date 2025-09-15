@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import RegistroModernForm from '../Components/RegistroModernForm';
@@ -46,35 +46,80 @@ const Nutricion = () => {
     { id: 'Cena', icono: '🌙' },
   ];
 
-  useEffect(() => {
-    const cerrarEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMostrarCalendario(false);
-    };
-    document.addEventListener('keydown', cerrarEsc);
-    return () => document.removeEventListener('keydown', cerrarEsc);
-  }, []);
-
-  // 🔹 cuando cambie ultimaActualizacion, refrescamos el resumen
+  // 🔹 refrescar resumen cuando cambia ultimaActualizacion
   useEffect(() => {
     setRefrescar(prev => !prev);
   }, [ultimaActualizacion]);
 
+  // 🔹 cerrar modal con ESC
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMostrarCalendario(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  // 🔹 BLOQUEO DE SCROLL cuando el calendario está abierto
+  const scrollYRef = useRef(0);
+  useEffect(() => {
+    if (mostrarCalendario) {
+      // Guardamos la posición actual y fijamos el <body>
+      scrollYRef.current = window.scrollY || window.pageYOffset;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollYRef.current}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restauramos el scroll y estilos del <body>
+      const y = Math.abs(parseInt(document.body.style.top || '0', 10));
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      if (y) window.scrollTo(0, y);
+    }
+
+    // Cleanup por si el componente se desmonta con el modal abierto
+    return () => {
+      const y = Math.abs(parseInt(document.body.style.top || '0', 10));
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      if (y) window.scrollTo(0, y);
+    };
+  }, [mostrarCalendario]);
+
   return (
     <div className="dashboard-container">
-      {/* 🔹 Unificado: usamos dashboard-main en lugar de nutricion-contenido */}
       <main className="dashboard-main">
         <h3 className="titulo-carrusel">
           ⏰ Selecciona el momento del día
         </h3>
 
+        {/* 🔹 Carrusel de momentos */}
         <div className="carousel-comidas">
           {momentos.map((m) => (
             <div
               key={m.id}
               className={`card-comida ${momentoSeleccionado === m.id ? 'activo' : ''}`}
               onClick={() => {
-                setMomentoSeleccionado(m.id);
-                setFormularioActivo(true);
+                if (momentoSeleccionado === m.id) {
+                  // 🔹 Si ya estaba seleccionado → des-seleccionamos
+                  setMomentoSeleccionado(null);
+                  setFormularioActivo(false);
+                } else {
+                  // 🔹 Nueva selección → abrimos formulario
+                  setMomentoSeleccionado(m.id);
+                  setFormularioActivo(true);
+                }
               }}
             >
               <span style={{ fontSize: 24 }}>{m.icono}</span>
@@ -83,23 +128,29 @@ const Nutricion = () => {
           ))}
         </div>
 
+        {/* 🔹 Botón del selector de fecha */}
         <div className="selector-fecha">
-          <div
+          <button
+            type="button"
             className="label-fecha"
             onClick={() => setMostrarCalendario(true)}
+            aria-expanded={mostrarCalendario}
+            aria-controls="calendario-modal"
           >
             📅 {fechaTexto}
             <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem' }}>▼</span>
-          </div>
+          </button>
         </div>
 
+        {/* 🔹 Modal con overlay para el calendario */}
         {mostrarCalendario && (
           <div
-            className="modal-overlay"
+            className="calendar-overlay"
             onClick={() => setMostrarCalendario(false)}
           >
             <div
-              className="modal-calendario"
+              className="calendar-popup"
+              id="calendario-modal"
               onClick={(e) => e.stopPropagation()}
             >
               <DatePicker
@@ -107,7 +158,7 @@ const Nutricion = () => {
                 onChange={(date: Date | null) => {
                   if (date) {
                     setFechaSeleccionada(date);
-                    setMostrarCalendario(false);
+                    setMostrarCalendario(false); // cerrar al elegir
                   }
                 }}
                 inline
@@ -117,22 +168,27 @@ const Nutricion = () => {
           </div>
         )}
 
-        {momentoSeleccionado && (
-          <h4 className="titulo-momento">{momentoSeleccionado}</h4>
-        )}
-
+        {/* 🔹 Formulario activo */}
         {formularioActivo && momentoSeleccionado && (
           <RegistroModernForm
             momento={momentoSeleccionado}
             fecha={fechaFormateada}
             onGuardado={handleRegistroGuardado}
+            onCancel={() => {
+              setFormularioActivo(false);
+              setMomentoSeleccionado(null);
+            }}
           />
         )}
 
-        <ResumenNutricional
-          fecha={fechaFormateada}
-          claveActualizacion={refrescar ? Date.now() : 0}
-        />
+        {/* 🔹 Resumen nutricional (cuando no hay formulario) */}
+        {!formularioActivo && (
+          <ResumenNutricional
+            fechaInicio={fechaFormateada}
+            fechaFin={fechaFormateada}
+            claveActualizacion={refrescar ? Date.now() : 0}
+          />
+        )}
       </main>
     </div>
   );

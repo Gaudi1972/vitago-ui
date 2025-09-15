@@ -1,9 +1,11 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import alimentosData from '../data/alimentos.json';
 import '../assets/Styles/RegistroFormModern.scss';
 import '../assets/Styles/CarruselComun.scss';
-import '../assets/Styles/Alimentos.scss'; // ✅ Nuevo SCSS para modal
-import { evaluarAporteNutricional } from '../Services/nutrientesHelper'; // ✅ Helper nutricional
+import '../assets/Styles/Alimentos.scss';
+import { evaluarAporteNutricional } from '../Services/nutrientesHelper';
+import CustomSelect from '../Components/CustomSelect';
 
 type Alimento = {
   [key: string]: any;
@@ -14,13 +16,15 @@ type Alimento = {
 const collator = new Intl.Collator('es', { sensitivity: 'base' });
 
 const Alimentos: React.FC = () => {
-  const [grupoSeleccionado, setGrupoSeleccionado] = useState<string | null>(null);
+  const [grupoSeleccionado, setGrupoSeleccionado] = useState<string>('Todos');
   const [busqueda, setBusqueda] = useState('');
   const carruselRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Estado para modal
   const [alimentoSeleccionado, setAlimentoSeleccionado] = useState<Alimento | null>(null);
   const [mostrarModal, setMostrarModal] = useState(false);
+
+  const [nutrienteOrden, setNutrienteOrden] = useState<string>('');
+  const [ordenDesc, setOrdenDesc] = useState<boolean>(true);
 
   const abrirDetalleAlimento = (alimento: Alimento) => {
     setAlimentoSeleccionado(alimento);
@@ -32,7 +36,27 @@ const Alimentos: React.FC = () => {
     setMostrarModal(false);
   };
 
-  // Lista de grupos alimenticios ordenados + botón "Todos"
+  // Bloquear scroll fondo
+  useEffect(() => {
+    if (mostrarModal) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+  }, [mostrarModal]);
+
+  // Detectar altura real del header y setear variables CSS
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('.dashboard-header');
+    if (header) {
+      const height = header.offsetHeight;
+      document.documentElement.style.setProperty('--header-height', `${height}px`);
+      document.documentElement.style.setProperty('--modal-offset', `20px`);
+    }
+  }, []);
+
   const grupos = useMemo(() => {
     const set = new Set<string>();
     (alimentosData as Alimento[]).forEach(a => {
@@ -41,22 +65,38 @@ const Alimentos: React.FC = () => {
     return ['Todos', ...Array.from(set).sort((a, b) => collator.compare(a, b))];
   }, []);
 
-  // Scroll al primer botón
   useEffect(() => {
     carruselRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
   }, []);
 
-  // Lista filtrada y ordenada
+  const opcionesOrden = useMemo(
+    () => [
+      { label: "Nombre (A-Z)", value: "" },
+      { label: "Calorías", value: "Calorías" },
+      { label: "Proteínas", value: "Proteínas" },
+      { label: "Fibra", value: "Fibra" },
+      { label: "Grasas", value: "Grasas" },
+      { label: "Grasas saturadas", value: "Grasas saturadas" },
+      { label: "Azúcares", value: "Azúcares" },
+      { label: "Sodio", value: "Sodio" },
+      { label: "Calcio", value: "Calcio" },
+      { label: "Hierro", value: "Hierro" },
+      { label: "Potasio", value: "Potasio" },
+    ],
+    []
+  );
+
+  const sortStatus = useMemo(() => {
+    const campo = nutrienteOrden ? nutrienteOrden : "Nombre";
+    const direccion = ordenDesc ? "descendente" : "ascendente";
+    return `Ordenando por ${campo} en sentido ${direccion}.`;
+  }, [nutrienteOrden, ordenDesc]);
+
   const alimentosFiltrados = useMemo(() => {
     let lista = (alimentosData as Alimento[])
-      .filter(
-        a =>
-          grupoSeleccionado === null ||
-          grupoSeleccionado === 'Todos' ||
-          a['Grupo alimenticio']?.trim() === grupoSeleccionado
-      )
-      .sort((a, b) =>
-        collator.compare(a['Nombre del alimento'], b['Nombre del alimento'])
+      .filter(a =>
+        grupoSeleccionado === 'Todos' ||
+        a['Grupo alimenticio']?.trim() === grupoSeleccionado
       );
 
     if (busqueda.trim()) {
@@ -65,15 +105,68 @@ const Alimentos: React.FC = () => {
         a['Nombre del alimento'].toLowerCase().includes(q)
       );
     }
+
+    if (nutrienteOrden) {
+      lista.sort((a, b) => {
+        const evalA = evaluarAporteNutricional(a);
+        const evalB = evaluarAporteNutricional(b);
+        const valA = evalA[nutrienteOrden]?.valor ?? 0;
+        const valB = evalB[nutrienteOrden]?.valor ?? 0;
+        return ordenDesc ? valB - valA : valA - valB;
+      });
+    } else {
+      lista.sort((a, b) =>
+        collator.compare(a['Nombre del alimento'], b['Nombre del alimento'])
+      );
+    }
+
     return lista;
-  }, [grupoSeleccionado, busqueda]);
+  }, [grupoSeleccionado, busqueda, nutrienteOrden, ordenDesc]);
+
+  const modalContent = (
+    <div className="modal-overlay" onClick={cerrarModal}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>{alimentoSeleccionado?.['Nombre del alimento']}</h3>
+          <button className="modal-close" onClick={cerrarModal}>✖</button>
+        </div>
+        <ul>
+          {alimentoSeleccionado &&
+            Object.entries(evaluarAporteNutricional(alimentoSeleccionado)).map(
+              ([nutriente, data]: any) => {
+                let icon = "⚪";
+                if (data.estado === "verde") icon = "🟢";
+                if (data.estado === "ambar") icon = "🟡";
+                if (data.estado === "rojo") icon = "🔴";
+                if (data.estado === "gris") icon = "⚪";
+
+                return (
+                  <li key={nutriente} className={`nutriente-card estado-${data.estado}`}>
+                    <span className="nutriente-icon">{icon}</span>
+                    <div className="nutriente-info">
+                      <strong>{nutriente}:</strong>{" "}
+                      {data.valor} {data.unidad || ''} por 100 g
+                      <br />
+                      <small>{data.comentario}</small>
+                    </div>
+                  </li>
+                );
+              }
+            )}
+        </ul>
+        <p className="nota-informativa">
+          ℹ️ La información nutricional mostrada tiene fines únicamente informativos. 
+          Consulta la sección <strong>Acerca de</strong> para más detalles.
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="dashboard-container alimentos-page">
       <main className="dashboard-main">
         <h3 className="titulo-carrusel">🍽️ Base de Datos de Alimentos</h3>
 
-        {/* ✅ Carrusel estilo Nutrición */}
         <div className="carousel-comidas" ref={carruselRef}>
           {grupos.map(g => (
             <div
@@ -86,97 +179,100 @@ const Alimentos: React.FC = () => {
           ))}
         </div>
 
-        {/* ✅ Buscador */}
-        {grupoSeleccionado && grupoSeleccionado !== 'Todos' && (
-          <>
-            <h4 className="titulo-momento">{grupoSeleccionado}</h4>
-            <div className="input-icon-wrapper">
-              <input
-                type="text"
-                placeholder="🔎 Buscar alimento…"
-                value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
-              />
-            </div>
-          </>
-        )}
+        <div className="ordenador-nutriente">
+          <span className="ordenar-label">Ordenar por:</span>
 
-        {/* ✅ Lista de alimentos filtrada */}
+          <div className="ordenar-controles">
+            <CustomSelect
+              value={nutrienteOrden}
+              onChange={setNutrienteOrden}
+              options={opcionesOrden}
+            />
+
+            <div className="orden-botones">
+              <button
+                type="button"
+                className={`btn-orden asc ${!ordenDesc ? 'activo' : ''}`}
+                onClick={() => setOrdenDesc(false)}
+                aria-label="Ordenar ascendente"
+                title="Ascendente"
+              >
+                <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none">
+                  <path d="M12 5 L6 15 H18 Z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className={`btn-orden desc ${ordenDesc ? 'activo' : ''}`}
+                onClick={() => setOrdenDesc(true)}
+                aria-label="Ordenar descendente"
+                title="Descendente"
+              >
+                <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" fill="none">
+                  <path d="M12 19 L6 9 H18 Z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <span className="sr-only" aria-live="polite">{sortStatus}</span>
+
+          <div className="input-icon-wrapper search-box">
+            <svg className="search-icon" viewBox="0 0 24 24" width="20" height="20">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" strokeWidth="2" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar alimento…"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+            />
+          </div>
+        </div>
+
         <ul className="lista-alimentos">
-          {alimentosFiltrados.map((a, idx) => (
-            <li
-              key={`${a['Nombre del alimento']}-${idx}`}
-              onClick={() => abrirDetalleAlimento(a)} // 👈 click abre modal
-              style={{ cursor: 'pointer' }}
-            >
-              <span className="indice">{idx + 1}.</span>
-              <span className="nombre">{a['Nombre del alimento']}</span>
-            </li>
-          ))}
-          {grupoSeleccionado && alimentosFiltrados.length === 0 && (
-            <li className="vacio">
-              No hay alimentos que coincidan con la búsqueda.
-            </li>
+          {alimentosFiltrados.map((a, idx) => {
+            const evalNut = evaluarAporteNutricional(a);
+            return (
+              <li key={`${a['Nombre del alimento']}-${idx}`} onClick={() => abrirDetalleAlimento(a)}>
+                <div className="fila-alimento">
+                  <div className="col-izq">
+                    <span className="indice">{idx + 1}.</span>
+                    <span className="texto">{a['Nombre del alimento']}</span>
+                  </div>
+                  {nutrienteOrden && evalNut[nutrienteOrden] && (
+                    <div className="col-der">
+                      ≈{evalNut[nutrienteOrden].valor} {evalNut[nutrienteOrden].unidad || ''} / 100 g
+                    </div>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+          {alimentosFiltrados.length === 0 && (
+            <li className="vacio">No hay alimentos que coincidan con la búsqueda.</li>
           )}
         </ul>
       </main>
 
-      {/* ✅ Modal de detalle nutricional estilo semáforo */}
-      {mostrarModal && alimentoSeleccionado && (
-        <div className="modal-overlay" onClick={cerrarModal}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={cerrarModal}>✖</button>
-
-            <h3>{alimentoSeleccionado['Nombre del alimento']}</h3>
-
-            {/* ✅ Calorías destacadas arriba con semáforo */}
-            {(() => {
-              const calorias = alimentoSeleccionado["Calorías por 100g"] || 0;
-              let estado: "verde" | "ambar" | "rojo" | "gris" = "gris";
-              if (calorias > 0 && calorias <= 40) estado = "verde";
-              else if (calorias <= 100) estado = "ambar";
-              else if (calorias > 100) estado = "rojo";
-
-              return (
-                <div className={`calorias-box calorias-${estado}`}>
-                  🔥 {calorias} kcal por 100 g
-                </div>
-              );
-            })()}
-
-            <ul>
-              {Object.entries(evaluarAporteNutricional(alimentoSeleccionado)).map(
-                ([nutriente, data]: any) => {
-                  let icon = "⚪";
-                  if (data.estado === "verde") icon = "🟢";
-                  if (data.estado === "ambar") icon = "🟡";
-                  if (data.estado === "rojo") icon = "🔴";
-                  if (data.estado === "gris") icon = "⚪";
-
-                  return (
-                    <li
-                      key={nutriente}
-                      className={`nutriente-card estado-${data.estado}`}
-                    >
-                      <span className="nutriente-icon">{icon}</span>
-                      <div className="nutriente-info">
-                        <strong>{nutriente}:</strong>{" "}
-                        {data.valor} {data.unidad || ''} por 100 g
-                        <br />
-                        <small>{data.comentario}</small>
-                      </div>
-                    </li>
-                  );
-                }
-              )}
-            </ul>
-          </div>
-        </div>
-      )}
+      {/* Modal en Portal */}
+      {mostrarModal && alimentoSeleccionado &&
+        ReactDOM.createPortal(modalContent, document.body)
+      }
     </div>
   );
 };
 
 export default Alimentos;
+
+
+
+
+
+
+
+
+
 
 

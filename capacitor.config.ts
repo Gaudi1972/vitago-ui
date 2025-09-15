@@ -5,10 +5,9 @@ const config: CapacitorConfig = {
   appName: 'VitaGo',
   webDir: 'dist',
   server: {
-    url: 'https://vitago.netlify.app', // URL de tu Netlify
+    androidScheme: "https",
     cleartext: true
   }
 };
 
 export default config;
-
