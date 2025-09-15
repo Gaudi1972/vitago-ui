@@ -1,8 +1,8 @@
 workflows:
   ios-simulator-capacitor:
-    name: iOS Simulator build (Capacitor + Vite)
+    name: iOS Simulator build (Capacitor + Vite → IPA for Appetize)
     environment:
-      node: 20.11.0   # ✅ Node 20 (requerido por Capacitor)
+      node: 20.11.0   # ✅ Node 20 requerido por Capacitor
       npm: 10.2.4
       xcode: 15.0
     cache:
@@ -34,14 +34,16 @@ workflows:
             -configuration Debug \
             -sdk iphonesimulator \
             -derivedDataPath ios_build
-      - name: Zip .app for Appetize
+      - name: Package .ipa for Appetize
         script: |
           cd ios_build/Build/Products/Debug-iphonesimulator
-          zip -r VitaGo-sim.zip App.app
+          mkdir -p Payload
+          cp -R App.app Payload/
+          zip -r VitaGo-sim.ipa Payload
     artifacts:
-      - ios_build/Build/Products/Debug-iphonesimulator/VitaGo-sim.zip
+      - ios_build/Build/Products/Debug-iphonesimulator/VitaGo-sim.ipa
     publishing:
       email:
         recipients:
-          - vitago-ui@gmail.com
+          - vitago.app@gmail.com
 
