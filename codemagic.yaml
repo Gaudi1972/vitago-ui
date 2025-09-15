@@ -1,22 +1,46 @@
 workflows:
-  ios-workflow:
-    name: iOS Build for Capacitor
+  ios-simulator-capacitor:
+    name: iOS Simulator build (Capacitor + Vite)
     environment:
-      node: 18.16.0   # versión de Node.js
+      node: 18.16.0
       npm: 9.5.1
-      xcode: latest
+      xcode: 15.0
+    cache:
+      cache_paths:
+        - ~/.npm
     scripts:
-      - name: Install dependencies
-        script: npm install
-      - name: Build React app
-        script: npm run build
-      - name: Sync Capacitor
+      - name: Install dependencies (clean)
+        script: npm ci || npm install
+      - name: Ensure vite is executable (best effort)
+        script: |
+          if [ -f node_modules/.bin/vite ]; then
+            chmod +x node_modules/.bin/vite || true
+          fi
+      - name: Build web (Vite) -> dist
+        script: node ./node_modules/vite/bin/vite.js build
+      - name: Add iOS platform (if not present)
+        script: npx cap add ios || true
+      - name: Sync Capacitor (copy web to iOS)
         script: npx cap sync ios
-      - name: Build iOS app
-        script: xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Debug build
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install
+      - name: Xcode build for Simulator (Debug)
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath ios_build
+      - name: Zip .app for Appetize
+        script: |
+          cd ios_build/Build/Products/Debug-iphonesimulator
+          zip -r VitaGo-sim.zip App.app
     artifacts:
-      - build/ios/Debug-iphonesimulator/*.app
+      - ios_build/Build/Products/Debug-iphonesimulator/VitaGo-sim.zip
     publishing:
       email:
         recipients:
-          - viyago.app@gmail.com
+          - vitago.app@gmail.com
