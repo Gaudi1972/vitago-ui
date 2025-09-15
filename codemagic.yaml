@@ -1,6 +1,6 @@
 workflows:
   ios-simulator-capacitor:
-    name: iOS Simulator build (Capacitor + Vite → IPA for Appetize)
+    name: iOS Simulator build (Capacitor + Vite → App.zip for Appetize)
     environment:
       node: 20.11.0   # ✅ Node 20 requerido por Capacitor
       npm: 10.2.4
@@ -11,21 +11,21 @@ workflows:
     scripts:
       - name: Install dependencies (clean)
         script: npm ci || npm install
-      - name: Ensure vite is executable (best effort)
-        script: |
-          if [ -f node_modules/.bin/vite ]; then
-            chmod +x node_modules/.bin/vite || true
-          fi
-      - name: Build web (Vite) -> dist
-        script: node ./node_modules/vite/bin/vite.js build
+
+      - name: Build React app
+        script: npm run build   # ✅ genera dist/ automáticamente
+
       - name: Add iOS platform (if not present)
         script: npx cap add ios || true
+
       - name: Sync Capacitor (copy web to iOS)
         script: npx cap sync ios
+
       - name: Install CocoaPods
         script: |
           cd ios/App
           pod install
+
       - name: Xcode build for Simulator (Debug)
         script: |
           xcodebuild \
@@ -34,14 +34,14 @@ workflows:
             -configuration Debug \
             -sdk iphonesimulator \
             -derivedDataPath ios_build
-      - name: Package .ipa for Appetize
+
+      - name: Package .app for Appetize
         script: |
           cd ios_build/Build/Products/Debug-iphonesimulator
-          mkdir -p Payload
-          cp -R App.app Payload/
-          zip -r VitaGo-sim.ipa Payload
+          zip -r VitaGo-sim.zip App.app   # ✅ Appetize acepta este .zip
     artifacts:
-      - ios_build/Build/Products/Debug-iphonesimulator/VitaGo-sim.ipa
+      - ios_build/Build/Products/Debug-iphonesimulator/VitaGo-sim.zip
+
     publishing:
       email:
         recipients:
